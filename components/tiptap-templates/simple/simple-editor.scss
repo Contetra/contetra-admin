@@ -80,3 +80,20 @@ body,
     padding: 1rem 1.5rem 30vh;
   }
 }
+
+.simple-editor {
+
+  .custom-box {
+    display: inline-block;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    background: #008AD2;
+    border-radius: 6px;
+    color: white;
+    font-size: 22px;
+    font-weight: 500;
+  }
+
+}

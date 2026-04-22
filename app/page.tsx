@@ -49,7 +49,7 @@ export default function Home() {
   useEffect(() => {
     // Handle successful API response (status: true)
     if (emailData && isSuccess && emailData?.statusCode) {
-      console.log("emailData", emailData);
+     
 
       toast.success(emailData?.response?.message);
       const token = emailData?.response.access_token;

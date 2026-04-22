@@ -53,27 +53,23 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "dashboard",
+      url: "/dashboard",
       icon: SquareTerminal,
       isActive: true,
     },
     {
       title: "Blog",
-      url: "blog",
+      url: "dashboard/blog/all-blogs",
       icon: SquareTerminal,
       isActive: false,
       items: [
         {
+          title: "All Blogs",
+          url: "/dashboard/blog/all-blogs",
+        },
+        {
           title: "Add a new blog",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
+          url: "/dashboard/blog/add-a-new-blog",
         },
       ],
     },
