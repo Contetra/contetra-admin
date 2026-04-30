@@ -80,7 +80,7 @@ import "@/components/tiptap-templates/simple/simple-editor.scss";
 import { CustomHeading } from "@/components/tiptap-ui/customheading/customHeading";
 
 type SimpleEditorProps = {
-  content: string;
+  content?: string;
   onChange?: (value: string) => void;
 };
 
