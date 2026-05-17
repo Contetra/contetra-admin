@@ -100,7 +100,7 @@ export default function Home() {
     }
 
     trigger({
-      body : data,
+      body : {...data},
       captchaToken,
     });
 

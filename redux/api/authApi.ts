@@ -6,10 +6,13 @@ export const authApi = createApi({
 
   endpoints: (builder) => ({
     postAdminLogin: builder.mutation({
-      query: (body) => ({
+      query: ({ body, captchaToken }) => ({
         url: "/auth/login",
         method: "POST",
         body,
+        headers: {
+          "x-captcha-token": captchaToken,
+        },
       }),
     }),
   }),
