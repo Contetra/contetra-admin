@@ -1,4 +1,5 @@
 import { authApi } from "@/redux/api/authApi";
+import { emailsApi } from "@/redux/api/emailsApi";
 import { postsApi } from "@/redux/api/postsApi";
 import { configureStore } from "@reduxjs/toolkit";
 
@@ -7,10 +8,11 @@ export const store = () => {
     reducer: {
       [authApi.reducerPath]: authApi.reducer,
       [postsApi.reducerPath]: postsApi.reducer,
+      [emailsApi.reducerPath]: emailsApi.reducer,
     },
 
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat([authApi.middleware, postsApi.middleware]),
+      getDefaultMiddleware().concat([authApi.middleware, postsApi.middleware, emailsApi.middleware]),
   });
 };
 

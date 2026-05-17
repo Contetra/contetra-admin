@@ -49,5 +49,5 @@ export const {
   usePostBlogAddMutation,
   useLazyGetPostsListQuery,
   usePostBlogUpdateMutation,
-  useLazyGetBlogContentQuery
+  useLazyGetBlogContentQuery,
 } = postsApi;

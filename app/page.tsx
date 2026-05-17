@@ -15,11 +15,13 @@ import {
   Form,
 } from "@/components/ui/form";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EyeClosed, EyeClosedIcon } from "lucide-react";
 import { toast } from "sonner";
 import { APIError } from "@/interface/api-response.types";
 import { usePostAdminLoginMutation } from "@/redux/api/authApi";
+import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
+
 
 // Define Schema
 const FormSchema = z.object({
@@ -35,6 +37,9 @@ export default function Home() {
   const router = useRouter();
   const [trigger, { data: emailData, isError, isSuccess, error }] =
     usePostAdminLoginMutation();
+    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+    const [captchaError, setCaptchaError] = useState<string | null>(null);
+    const turnstileRef = useRef<TurnstileInstance | null>(null);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -49,10 +54,9 @@ export default function Home() {
   useEffect(() => {
     // Handle successful API response (status: true)
     if (emailData && isSuccess && emailData?.statusCode) {
-     
-
       toast.success(emailData?.response?.message);
       const token = emailData?.response.access_token;
+      turnstileRef.current?.reset();
 
       if (token) {
         document.cookie = `pghlasdetg=${token}; path=/;`;
@@ -76,6 +80,8 @@ export default function Home() {
     // Handle API request errors (e.g., 401 Unauthorized).
     if (isError && error) {
       let errorMessage = "An error occurred";
+      turnstileRef.current?.reset();
+
 
       // Ensure error is of type APIError.
       if ((error as APIError)?.data) {
@@ -88,8 +94,26 @@ export default function Home() {
   }, [isSuccess, emailData, isError, error, trigger, router]);
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    trigger(data);
+    if (!captchaToken) {
+      setCaptchaError("Please verify the captcha");
+      return;
+    }
+
+    trigger({
+      body : {...data},
+      captchaToken,
+    });
+
+    setCaptchaError(null);
+
+    setCaptchaToken(null);
+    turnstileRef.current?.reset();
   }
+
+  const setToken = (token: string) => {
+    setCaptchaToken(token);
+    setCaptchaError(null);
+  };
 
   return (
     <div className="w-full h-screen flex justify-center items-center bg-gray-100">
@@ -100,6 +124,7 @@ export default function Home() {
         <CardContent>
           <Form {...form}>
             <form
+            // eslint-disable-next-line react-hooks/refs
               onSubmit={form.handleSubmit(onSubmit)}
               className="flex flex-col gap-4"
             >
@@ -155,6 +180,17 @@ export default function Home() {
                   </FormItem>
                 )}
               />
+
+              <div className="w-full min-w-0">
+                {captchaError ? (
+                  <p className="mb-2 text-sm text-red-300">{captchaError}</p>
+                ) : null}
+                <Turnstile
+                  ref={turnstileRef}
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                  onSuccess={setToken}
+                />
+              </div>
 
               {/* Submit Button */}
               <Button type="submit" className="w-full">
