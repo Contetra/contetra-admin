@@ -74,13 +74,13 @@ const data = {
       ],
     },
     {
-      title: "Models",
+      title: "Emails",
       url: "#",
       icon: Bot,
       items: [
         {
-          title: "Genesis",
-          url: "#",
+          title: "All Emails",
+          url: "/dashboard/emails/all-emails",
         },
         {
           title: "Explorer",
