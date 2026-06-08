@@ -17,6 +17,10 @@ import { Typography } from "@tiptap/extension-typography";
 import { Highlight } from "@tiptap/extension-highlight";
 import { Subscript } from "@tiptap/extension-subscript";
 import { Superscript } from "@tiptap/extension-superscript";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableCell } from "@tiptap/extension-table-cell";
 import { Selection } from "@tiptap/extensions";
 
 // --- UI Primitives ---
@@ -129,9 +133,15 @@ const MainToolbarContent = ({
         />
         <BlockquoteButton />
         <CodeBlockButton />
+        <Button
+          onClick={() => {
+            if (!editor) return;
+            editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+          }}
+        >
+          Insert table
+        </Button>
       </ToolbarGroup>
-
-      <ToolbarSeparator />
 
       <ToolbarGroup>
         <MarkButton type="bold" />
@@ -243,6 +253,10 @@ export function SimpleEditor({ content, onChange }: SimpleEditorProps) {
       Superscript,
       Subscript,
       Selection,
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
       ImageUploadNode.configure({
         accept: "image/*",
         maxSize: MAX_FILE_SIZE,
@@ -276,6 +290,10 @@ export function SimpleEditor({ content, onChange }: SimpleEditorProps) {
     overlayHeight: toolbarRef.current?.getBoundingClientRect().height ?? 0,
   });
 
+  const isTableActive =
+    editor !== null &&
+    (editor.isActive("table") || editor.isActive("tableCell"));
+
   useEffect(() => {
     if (!isMobile && mobileView !== "main") {
       setMobileView("main");
@@ -308,6 +326,81 @@ export function SimpleEditor({ content, onChange }: SimpleEditorProps) {
             />
           )}
         </Toolbar>
+
+        {isTableActive && (
+          <div className="simple-editor-table-toolbar">
+            <div className="table-toolbar-row">
+              <Button
+                onClick={() =>
+                  editor?.chain().focus().addColumnBefore().run()
+                }
+              >
+                Add column before
+              </Button>
+              <Button
+                onClick={() =>
+                  editor?.chain().focus().addColumnAfter().run()
+                }
+              >
+                Add column after
+              </Button>
+              <Button
+                onClick={() => editor?.chain().focus().deleteColumn().run()}
+              >
+                Delete column
+              </Button>
+              <Button onClick={() => editor?.chain().focus().addRowBefore().run()}>
+                Add row before
+              </Button>
+              <Button onClick={() => editor?.chain().focus().addRowAfter().run()}>
+                Add row after
+              </Button>
+              <Button onClick={() => editor?.chain().focus().deleteRow().run()}>
+                Delete row
+              </Button>
+              <Button onClick={() => editor?.chain().focus().deleteTable().run()}>
+                Delete table
+              </Button>
+              <Button onClick={() => editor?.chain().focus().mergeCells().run()}>
+                Merge cells
+              </Button>
+              <Button onClick={() => editor?.chain().focus().splitCell().run()}>
+                Split cell
+              </Button>
+              <Button
+                onClick={() => editor?.chain().focus().toggleHeaderColumn().run()}
+              >
+                Toggle header column
+              </Button>
+              <Button
+                onClick={() => editor?.chain().focus().toggleHeaderRow().run()}
+              >
+                Toggle header row
+              </Button>
+              <Button
+                onClick={() => editor?.chain().focus().toggleHeaderCell().run()}
+              >
+                Toggle header cell
+              </Button>
+              <Button
+                onClick={() =>
+                  editor?.chain().focus().setCellAttribute("background", "#f5f5f5").run()
+                }
+              >
+                Set cell background
+              </Button>
+              <Button onClick={() => editor?.chain().focus().fixTables().run()}>
+                Fix tables
+              </Button>
+              <Button onClick={() => editor?.chain().focus().goToNextCell().run()}>
+                Go to next cell
+              </Button>
+              <Button onClick={() => editor?.chain().focus().goToPreviousCell().run()}>
+                Go to previous cell
+              </Button>
+            </div>
+          </div>
+        )}
 
         <EditorContent
           editor={editor}

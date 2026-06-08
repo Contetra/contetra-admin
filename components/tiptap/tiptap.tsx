@@ -6,6 +6,10 @@ import Underline from '@tiptap/extension-underline'
 import Link from '@tiptap/extension-link'
 import TextAlign from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableHeader } from '@tiptap/extension-table-header'
+import { TableCell } from '@tiptap/extension-table-cell'
 import { Button } from '../ui/button'
 
 const Toolbar = ({ editor }: { editor: any }) => {
@@ -50,6 +54,18 @@ const Toolbar = ({ editor }: { editor: any }) => {
         1. List
       </Button>
 
+      <Button
+        onClick={() =>
+          editor
+            .chain()
+            .focus()
+            .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+            .run()
+        }
+      >
+        Table
+      </Button>
+
       <Button onClick={() => editor.chain().focus().undo().run()}>
         Undo
       </Button>
@@ -74,6 +90,12 @@ const RichEditor = () => {
       Placeholder.configure({
         placeholder: 'Start typing...',
       }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: '<p>Hello World!</p>',
     immediatelyRender: false,
