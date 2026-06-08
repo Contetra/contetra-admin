@@ -3,6 +3,7 @@
 import { ShadcnTable } from "@/components/ui/ShadcnTable";
 import { useEffect, useState } from "react";
 import { blogListColumns } from "./components/blogListColumns";
+import { EditBlogDialog } from "./components/edit-blog-dialog";
 import { useLazyGetPostsListQuery } from "@/redux/api/postsApi";
 
 export default function Page() {
@@ -15,6 +16,9 @@ export default function Page() {
     sortOrder: "desc",
     search: "",
   });
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedBlog, setSelectedBlog] = useState<any>(null);
 
   const meta = data?.response?.meta;
   const totalPages = meta?.totalPages ?? 1;
@@ -45,8 +49,23 @@ export default function Page() {
           onPageChange: handlePageChange,
         }}
         isLoading={isLoading}
-        columns={blogListColumns(setPaginationData)}
+        columns={
+          blogListColumns(setPaginationData, (blog: any) => {
+            setSelectedBlog(blog);
+            setEditOpen(true);
+          })
+        }
         data={data?.response?.data || []}
+      />
+
+      <EditBlogDialog
+        open={editOpen}
+        onOpenChange={(open: boolean) => {
+          setEditOpen(open);
+          if (!open) setSelectedBlog(null);
+        }}
+        blogData={selectedBlog}
+        onSuccessUpdate={() => trigger(paginationData)}
       />
     </div>
   );

@@ -28,6 +28,7 @@ export const blogListColumns = (
   setUserDataData: React.Dispatch<
     React.SetStateAction<blogListColumnsTableSetTypes>
   >,
+  onEdit?: (blog: any) => void,
 ): ColumnDef<blogListColumnsTypes>[] => [
   {
     accessorKey: "title",
@@ -89,7 +90,12 @@ export const blogListColumns = (
 
       return (
         <div className="flex items-center justify-start gap-4">
-          <Button className=" cursor-pointer">Edit Details</Button>
+          <Button
+            className=" cursor-pointer"
+            onClick={() => onEdit && onEdit(row.original)}
+          >
+            Edit Details
+          </Button>
           <Link href={`/dashboard/blog/edit-blog/${postId}`}>
             <Button className=" cursor-pointer">Edit Blog</Button>
           </Link>
