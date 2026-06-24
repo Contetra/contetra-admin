@@ -70,6 +70,11 @@ interface BlogData {
   slug: string;
   feature_image_url: string;
   excerpt: string;
+  meta_title?: string;
+  meta_description?: string;
+  meta_keywords?: string;
+  meta_og_title?: string;
+  meta_og_description?: string;
   created_at: string;
   status: string;
   authors: string[];
@@ -103,6 +108,21 @@ const FormSchema = z.object({
     message: "Category Name must be at least 2 characters.",
   }),
   created_at: z.date(),
+  meta_title: z.string().max(255, {
+    message: "Meta title must be at most 255 characters.",
+  }),
+  meta_description: z.string().max(1000, {
+    message: "Meta description must be at most 1000 characters.",
+  }),
+  meta_keywords: z.string().max(500, {
+    message: "Meta keywords must be at most 500 characters.",
+  }),
+  meta_og_title: z.string().max(255, {
+    message: "Meta OG title must be at most 255 characters.",
+  }),
+  meta_og_description: z.string().max(1000, {
+    message: "Meta OG description must be at most 1000 characters.",
+  }),
 });
 
 interface EditBlogDialogProps {
@@ -152,6 +172,11 @@ export const EditBlogDialog = ({
       category_name: "",
       category_id: "",
       created_at: new Date(),
+      meta_title: "",
+      meta_description: "",
+      meta_keywords: "",
+      meta_og_title: "",
+      meta_og_description: "",
     },
   });
 
@@ -196,6 +221,11 @@ export const EditBlogDialog = ({
     if (source?.created_at) {
       form.setValue("created_at", new Date(source.created_at));
     }
+    form.setValue("meta_title", source?.meta_title || "");
+    form.setValue("meta_description", source?.meta_description || "");
+    form.setValue("meta_keywords", source?.meta_keywords || "");
+    form.setValue("meta_og_title", source?.meta_og_title || "");
+    form.setValue("meta_og_description", source?.meta_og_description || "");
   }, [blogContent, blogContentSuccess, blogData, form, authorData, categoriesData]);
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
@@ -215,6 +245,11 @@ export const EditBlogDialog = ({
       feature_image_url: data?.feature_image_url,
       excerpt: data?.excerpt,
       created_at: data?.created_at.toISOString(),
+      meta_title: data?.meta_title,
+      meta_description: data?.meta_description,
+      meta_keywords: data?.meta_keywords,
+      meta_og_title: data?.meta_og_title,
+      meta_og_description: data?.meta_og_description,
     })
       .unwrap()
       .then(() => {
@@ -514,6 +549,101 @@ export const EditBlogDialog = ({
                         value={field.value}
                         onChange={field.onChange}
                         placeholder="Enter Created Date..."
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="meta_title"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Meta Title</FormLabel>
+                    <FormControl>
+                      <Input
+                        className="bg-white"
+                        placeholder="Enter meta title"
+                        maxLength={255}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="meta_description"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Meta Description</FormLabel>
+                    <FormControl>
+                      <Input
+                        className="bg-white"
+                        placeholder="Enter meta description"
+                        maxLength={1000}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="meta_keywords"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Meta Keywords</FormLabel>
+                    <FormControl>
+                      <Input
+                        className="bg-white"
+                        placeholder="Enter meta keywords (comma-separated)"
+                        maxLength={500}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="meta_og_title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Meta OG Title</FormLabel>
+                    <FormControl>
+                      <Input
+                        className="bg-white"
+                        placeholder="Enter meta Open Graph title"
+                        maxLength={255}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="meta_og_description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Meta OG Description</FormLabel>
+                    <FormControl>
+                      <Input
+                        className="bg-white"
+                        placeholder="Enter meta Open Graph description"
+                        maxLength={1000}
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />

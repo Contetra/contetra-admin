@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { ShadcnTable } from "@/components/ui/ShadcnTable";
 import { useEffect, useState } from "react";
@@ -49,12 +49,10 @@ export default function Page() {
           onPageChange: handlePageChange,
         }}
         isLoading={isLoading}
-        columns={
-          blogListColumns(setPaginationData, (blog: any) => {
-            setSelectedBlog(blog);
-            setEditOpen(true);
-          })
-        }
+        columns={blogListColumns(setPaginationData, (blog: any) => {
+          setSelectedBlog(blog);
+          setEditOpen(true);
+        })}
         data={data?.response?.data || []}
       />
 
