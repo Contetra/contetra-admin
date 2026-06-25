@@ -8,7 +8,7 @@ export const postsApi = createApi({
   endpoints: (builder) => ({
     getPostsList: builder.query({
       query: (post) =>
-        `/posts/all-posts-admin?page=${post?.page}&limit=${post?.limit}&sortBy=${post?.sortBy}&sortOrder=${post?.sortOrder}`,
+        `/posts/all-posts-admin?page=${post?.page}&limit=${post?.limit}&sortBy=${post?.sortBy}&sortOrder=${post?.sortOrder}&search=${post?.search}`,
     }),
 
     getAuthors: builder.query({
