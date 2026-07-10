@@ -121,6 +121,14 @@ const data = {
       icon: Settings2,
       items: [
         {
+          title: "Forms",
+          url: "/dashboard/settings/forms",
+        },
+        {
+          title: "Form Types",
+          url: "/dashboard/settings/form-types",
+        },
+        {
           title: "General",
           url: "#",
         },
