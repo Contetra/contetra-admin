@@ -45,6 +45,10 @@ import "@/components/tiptap-node/paragraph-node/paragraph-node.scss";
 
 // --- Tiptap UI ---
 import { HeadingDropdownMenu } from "@/components/tiptap-ui/heading-dropdown-menu";
+import {
+  FontSize,
+  FontSizeDropdownMenu,
+} from "@/components/tiptap-ui/font-size-dropdown-menu";
 import { ImageUploadButton } from "@/components/tiptap-ui/image-upload-button";
 import { ListDropdownMenu } from "@/components/tiptap-ui/list-dropdown-menu";
 import { BlockquoteButton } from "@/components/tiptap-ui/blockquote-button";
@@ -81,7 +85,10 @@ import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils";
 
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss";
-import { CustomHeading } from "@/components/tiptap-ui/customheading/customHeading";
+import {
+  CustomHeading,
+  CustomHeadingH2,
+} from "@/components/tiptap-ui/customheading/customHeading";
 
 type SimpleEditorProps = {
   content?: string;
@@ -103,16 +110,26 @@ const MainToolbarContent = ({
 
   return (
     <>
-      <Spacer />
-
       <ToolbarGroup>
         <Button
+          className="simple-editor-text-button"
+          data-style="ghost"
           onClick={() => {
             if (!editor) return;
             editor.chain().focus().insertCustomHeading().run();
           }}
         >
           Custom Heading
+        </Button>
+        <Button
+          className="simple-editor-text-button"
+          data-style="ghost"
+          onClick={() => {
+            if (!editor) return;
+            editor.chain().focus().insertCustomHeadingH2().run();
+          }}
+        >
+          Custom Heading H2
         </Button>
       </ToolbarGroup>
 
@@ -134,6 +151,8 @@ const MainToolbarContent = ({
         <BlockquoteButton />
         <CodeBlockButton />
         <Button
+          className="simple-editor-text-button"
+          data-style="ghost"
           onClick={() => {
             if (!editor) return;
             editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
@@ -149,6 +168,7 @@ const MainToolbarContent = ({
         <MarkButton type="strike" />
         <MarkButton type="code" />
         <MarkButton type="underline" />
+        <FontSizeDropdownMenu portal={isMobile} />
         {!isMobile ? (
           <ColorHighlightPopover />
         ) : (
@@ -243,6 +263,8 @@ export function SimpleEditor({ content, onChange }: SimpleEditorProps) {
         },
       }),
       CustomHeading,
+      CustomHeadingH2,
+      FontSize,
       HorizontalRule,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       TaskList,

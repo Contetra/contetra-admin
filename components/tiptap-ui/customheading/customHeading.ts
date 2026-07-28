@@ -6,6 +6,9 @@ declare module "@tiptap/core" {
     customHeading: {
       insertCustomHeading: () => ReturnType;
     };
+    customHeadingH2: {
+      insertCustomHeadingH2: () => ReturnType;
+    };
   }
 }
 
@@ -54,6 +57,54 @@ export const CustomHeading = Node.create({
                     text: "Custom Heading Content",
                   },
                 ],
+              },
+            ],
+          });
+        },
+    };
+  },
+});
+
+export const CustomHeadingH2 = Node.create({
+  name: "customHeadingH2",
+
+  group: "block",
+
+  content: "inline*",
+
+  defining: true,
+
+  addAttributes() {
+    return {
+      class: {
+        default: "custom-box",
+      },
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: "h2.custom-box",
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ["h2", mergeAttributes(HTMLAttributes), 0];
+  },
+
+  addCommands() {
+    return {
+      insertCustomHeadingH2:
+        () =>
+        ({ commands }: CommandProps) => {
+          return commands.insertContent({
+            type: this.name,
+            content: [
+              {
+                type: "text",
+                text: "Custom Heading Content",
               },
             ],
           });
