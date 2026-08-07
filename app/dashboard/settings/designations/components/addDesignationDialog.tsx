@@ -22,20 +22,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  FormType,
-  useUpdateFormTypeMutation,
-} from "@/redux/api/settingsApi";
+import { useCreateDesignationMutation } from "@/redux/api/settingsApi";
 
 const formSchema = z.object({
-  name: z.string().trim().min(1, "Form type name is required."),
+  name: z.string().trim().min(1, "Designation name is required."),
 });
 
-type UpdateFormTypeDialogProps = {
-  formType: FormType;
+type AddDesignationDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdated: () => void | Promise<unknown>;
+  onCreated: () => void | Promise<unknown>;
 };
 
 const getApiMessage = (value: unknown, fallback: string) => {
@@ -51,34 +47,34 @@ const getApiMessage = (value: unknown, fallback: string) => {
   return fallback;
 };
 
-export function UpdateFormTypeDialog({
-  formType,
+export function AddDesignationDialog({
   open,
   onOpenChange,
-  onUpdated,
-}: UpdateFormTypeDialogProps) {
-  const [updateFormType, { isLoading }] = useUpdateFormTypeMutation();
+  onCreated,
+}: AddDesignationDialogProps) {
+  const [createDesignation, { isLoading }] = useCreateDesignationMutation();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: formType.name },
+    defaultValues: { name: "" },
   });
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen && isLoading) return;
+    if (!nextOpen && !isLoading) form.reset();
     onOpenChange(nextOpen);
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const response = await updateFormType({
-        id: formType.id,
+      const response = await createDesignation({
         name: values.name,
       }).unwrap();
       toast.success(response.message);
-      await onUpdated();
+      await onCreated();
+      form.reset();
       onOpenChange(false);
     } catch (error: unknown) {
-      toast.error(getApiMessage(error, "Unable to update the form type."));
+      toast.error(getApiMessage(error, "Unable to add the designation."));
     }
   };
 
@@ -86,7 +82,7 @@ export function UpdateFormTypeDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Update Form Type</DialogTitle>
+          <DialogTitle>Add Designation</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -99,7 +95,7 @@ export function UpdateFormTypeDialog({
                   <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter form type name"
+                      placeholder="Enter designation name"
                       autoComplete="off"
                       disabled={isLoading}
                       {...field}
@@ -120,7 +116,7 @@ export function UpdateFormTypeDialog({
                 Cancel
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Updating..." : "Update Form Type"}
+                {isLoading ? "Adding..." : "Add Designation"}
               </Button>
             </DialogFooter>
           </form>

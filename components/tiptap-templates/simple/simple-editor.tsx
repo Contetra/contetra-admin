@@ -7,10 +7,10 @@ import {
   useCurrentEditor,
   useEditor,
 } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit";
-import { Image } from "@tiptap/extension-image";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { Typography } from "@tiptap/extension-typography";
@@ -34,6 +34,7 @@ import {
 
 // --- Tiptap Node ---
 import { ImageUploadNode } from "@/components/tiptap-node/image-upload-node/image-upload-node-extension";
+import { ImageWithControls } from "@/components/tiptap-node/image-node/image-node-extension";
 import { HorizontalRule } from "@/components/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension";
 import "@/components/tiptap-node/blockquote-node/blockquote-node.scss";
 import "@/components/tiptap-node/code-block-node/code-block-node.scss";
@@ -71,6 +72,9 @@ import { UndoRedoButton } from "@/components/tiptap-ui/undo-redo-button";
 import { ArrowLeftIcon } from "@/components/tiptap-icons/arrow-left-icon";
 import { HighlighterIcon } from "@/components/tiptap-icons/highlighter-icon";
 import { LinkIcon } from "@/components/tiptap-icons/link-icon";
+import { AlignLeftIcon } from "@/components/tiptap-icons/align-left-icon";
+import { AlignCenterIcon } from "@/components/tiptap-icons/align-center-icon";
+import { AlignRightIcon } from "@/components/tiptap-icons/align-right-icon";
 
 // --- Hooks ---
 import { useIsBreakpoint } from "@/hooks/use-is-breakpoint";
@@ -270,7 +274,16 @@ export function SimpleEditor({ content, onChange }: SimpleEditorProps) {
       TaskList,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
-      Image,
+      ImageWithControls.configure({
+        resize: {
+          enabled: true,
+          // top-right is reserved for the delete button
+          directions: ["bottom-right", "bottom-left", "top-left"],
+          minWidth: 80,
+          minHeight: 60,
+          alwaysPreserveAspectRatio: true,
+        },
+      }),
       Typography,
       Superscript,
       Subscript,
@@ -348,6 +361,67 @@ export function SimpleEditor({ content, onChange }: SimpleEditorProps) {
             />
           )}
         </Toolbar>
+
+        {editor && (
+          <BubbleMenu
+            editor={editor}
+            pluginKey="image-align-menu"
+            shouldShow={({ editor }) => editor.isActive("image")}
+            options={{ placement: "top", offset: 8 }}
+            className="tiptap-image-align-menu"
+          >
+            <Button
+              data-style="ghost"
+              data-active-state={
+                editor.isActive("image", { align: "left" }) ? "on" : "off"
+              }
+              tooltip="Align left"
+              onClick={() =>
+                editor.chain().focus().updateAttributes("image", { align: "left" }).run()
+              }
+            >
+              <AlignLeftIcon className="tiptap-button-icon" />
+            </Button>
+            <Button
+              data-style="ghost"
+              data-active-state={
+                editor.isActive("image", { align: "center" }) ? "on" : "off"
+              }
+              tooltip="Align center"
+              onClick={() =>
+                editor.chain().focus().updateAttributes("image", { align: "center" }).run()
+              }
+            >
+              <AlignCenterIcon className="tiptap-button-icon" />
+            </Button>
+            <Button
+              data-style="ghost"
+              data-active-state={
+                editor.isActive("image", { align: "right" }) ? "on" : "off"
+              }
+              tooltip="Align right"
+              onClick={() =>
+                editor.chain().focus().updateAttributes("image", { align: "right" }).run()
+              }
+            >
+              <AlignRightIcon className="tiptap-button-icon" />
+            </Button>
+            <ToolbarSeparator />
+            <Button
+              data-style="ghost"
+              tooltip="Reset size & alignment"
+              onClick={() =>
+                editor
+                  .chain()
+                  .focus()
+                  .updateAttributes("image", { align: null, width: null, height: null })
+                  .run()
+              }
+            >
+              Reset
+            </Button>
+          </BubbleMenu>
+        )}
 
         {isTableActive && (
           <div className="simple-editor-table-toolbar">

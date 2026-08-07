@@ -3,16 +3,16 @@
 import { ShadcnTable } from "@/components/ui/ShadcnTable";
 import { Input } from "@/components/ui/input";
 import {
-  FormType,
-  useDeleteFormTypeMutation,
-  useGetFormTypesQuery,
+  Department,
+  useDeleteDepartmentMutation,
+  useGetDepartmentsQuery,
 } from "@/redux/api/settingsApi";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { AddFormTypeDialog } from "./components/addFormTypeDialog";
-import { formTypesListColumns } from "./components/formTypesListColumns";
-import { UpdateFormTypeDialog } from "./components/updateFormTypeDialog";
+import { AddDepartmentDialog } from "./components/addDepartmentDialog";
+import { departmentsListColumns } from "./components/departmentsListColumns";
+import { UpdateDepartmentDialog } from "./components/updateDepartmentDialog";
 
 const PAGE_SIZE = 10;
 
@@ -29,33 +29,33 @@ const getApiMessage = (value: unknown, fallback: string) => {
   return fallback;
 };
 
-const getFormTypesFromResponse = (response: unknown): FormType[] => {
-  if (Array.isArray(response)) return response as FormType[];
+const getDepartmentsFromResponse = (response: unknown): Department[] => {
+  if (Array.isArray(response)) return response as Department[];
   if (!response || typeof response !== "object") return [];
 
   const value = response as Record<string, unknown>;
   const nestedResponse = value.response;
 
-  if (Array.isArray(nestedResponse)) return nestedResponse as FormType[];
+  if (Array.isArray(nestedResponse)) return nestedResponse as Department[];
   if (nestedResponse && typeof nestedResponse === "object") {
     const responseData = (nestedResponse as Record<string, unknown>).data;
-    if (Array.isArray(responseData)) return responseData as FormType[];
+    if (Array.isArray(responseData)) return responseData as Department[];
   }
 
-  return Array.isArray(value.data) ? (value.data as FormType[]) : [];
+  return Array.isArray(value.data) ? (value.data as Department[]) : [];
 };
 
-export default function FormTypesPage() {
+export default function DepartmentsPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editingFormType, setEditingFormType] = useState<FormType>();
-  const { data, isLoading, isFetching, refetch } = useGetFormTypesQuery(
+  const [editingDepartment, setEditingDepartment] = useState<Department>();
+  const { data, isLoading, isFetching, refetch } = useGetDepartmentsQuery(
     search ? { search } : undefined,
   );
-  const [deleteFormType, { isLoading: isDeleting }] =
-    useDeleteFormTypeMutation();
+  const [deleteDepartment, { isLoading: isDeleting }] =
+    useDeleteDepartmentMutation();
   const [deletingId, setDeletingId] = useState<string>();
 
   useEffect(() => {
@@ -63,41 +63,44 @@ export default function FormTypesPage() {
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
 
-  const formTypes = useMemo(() => getFormTypesFromResponse(data), [data]);
-  const filteredFormTypes = useMemo(() => {
+  const departments = useMemo(
+    () => getDepartmentsFromResponse(data),
+    [data],
+  );
+  const filteredDepartments = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return formTypes;
+    if (!term) return departments;
 
-    return formTypes.filter((formType) =>
-      [formType.id, formType.name].some((value) =>
+    return departments.filter((department) =>
+      [department.id, department.name].some((value) =>
         String(value ?? "").toLowerCase().includes(term),
       ),
     );
-  }, [formTypes, search]);
+  }, [departments, search]);
 
   const totalPages = Math.max(
     1,
-    Math.ceil(filteredFormTypes.length / PAGE_SIZE),
+    Math.ceil(filteredDepartments.length / PAGE_SIZE),
   );
   const visiblePage = Math.min(currentPage, totalPages);
-  const pageData = filteredFormTypes.slice(
+  const pageData = filteredDepartments.slice(
     (visiblePage - 1) * PAGE_SIZE,
     visiblePage * PAGE_SIZE,
   );
 
-  const handleDelete = async (formType: FormType) => {
+  const handleDelete = async (department: Department) => {
     const confirmed = window.confirm(
-      `Are you sure you want to delete "${formType.name}"?`,
+      `Are you sure you want to delete "${department.name}"?`,
     );
     if (!confirmed) return;
 
-    setDeletingId(formType.id);
+    setDeletingId(department.id);
     try {
-      const response = await deleteFormType(formType.id).unwrap();
+      const response = await deleteDepartment(department.id).unwrap();
       toast.success(response.message);
       await refetch();
     } catch (error: unknown) {
-      toast.error(getApiMessage(error, "Unable to delete the form type."));
+      toast.error(getApiMessage(error, "Unable to delete the department."));
     } finally {
       setDeletingId(undefined);
     }
@@ -109,14 +112,14 @@ export default function FormTypesPage() {
         <Input
           className="max-w-sm"
           type="text"
-          placeholder="Search form types..."
+          placeholder="Search departments..."
           value={searchInput}
           onChange={(event) => {
             setSearchInput(event.target.value);
             setCurrentPage(1);
           }}
         />
-        <Button onClick={() => setAddDialogOpen(true)}>Add Form Type</Button>
+        <Button onClick={() => setAddDialogOpen(true)}>Add Department</Button>
       </div>
 
       <ShadcnTable
@@ -126,26 +129,26 @@ export default function FormTypesPage() {
           onPageChange: setCurrentPage,
         }}
         isLoading={isLoading || isFetching}
-        columns={formTypesListColumns(
-          setEditingFormType,
+        columns={departmentsListColumns(
+          setEditingDepartment,
           handleDelete,
           isDeleting ? deletingId : undefined,
         )}
         data={pageData}
       />
 
-      <AddFormTypeDialog
+      <AddDepartmentDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onCreated={refetch}
       />
 
-      {editingFormType ? (
-        <UpdateFormTypeDialog
-          formType={editingFormType}
+      {editingDepartment ? (
+        <UpdateDepartmentDialog
+          department={editingDepartment}
           open
           onOpenChange={(open) => {
-            if (!open) setEditingFormType(undefined);
+            if (!open) setEditingDepartment(undefined);
           }}
           onUpdated={refetch}
         />

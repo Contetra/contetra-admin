@@ -3,16 +3,16 @@
 import { ShadcnTable } from "@/components/ui/ShadcnTable";
 import { Input } from "@/components/ui/input";
 import {
-  FormType,
-  useDeleteFormTypeMutation,
-  useGetFormTypesQuery,
+  Designation,
+  useDeleteDesignationMutation,
+  useGetDesignationsQuery,
 } from "@/redux/api/settingsApi";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { AddFormTypeDialog } from "./components/addFormTypeDialog";
-import { formTypesListColumns } from "./components/formTypesListColumns";
-import { UpdateFormTypeDialog } from "./components/updateFormTypeDialog";
+import { AddDesignationDialog } from "./components/addDesignationDialog";
+import { designationsListColumns } from "./components/designationsListColumns";
+import { UpdateDesignationDialog } from "./components/updateDesignationDialog";
 
 const PAGE_SIZE = 10;
 
@@ -29,33 +29,33 @@ const getApiMessage = (value: unknown, fallback: string) => {
   return fallback;
 };
 
-const getFormTypesFromResponse = (response: unknown): FormType[] => {
-  if (Array.isArray(response)) return response as FormType[];
+const getDesignationsFromResponse = (response: unknown): Designation[] => {
+  if (Array.isArray(response)) return response as Designation[];
   if (!response || typeof response !== "object") return [];
 
   const value = response as Record<string, unknown>;
   const nestedResponse = value.response;
 
-  if (Array.isArray(nestedResponse)) return nestedResponse as FormType[];
+  if (Array.isArray(nestedResponse)) return nestedResponse as Designation[];
   if (nestedResponse && typeof nestedResponse === "object") {
     const responseData = (nestedResponse as Record<string, unknown>).data;
-    if (Array.isArray(responseData)) return responseData as FormType[];
+    if (Array.isArray(responseData)) return responseData as Designation[];
   }
 
-  return Array.isArray(value.data) ? (value.data as FormType[]) : [];
+  return Array.isArray(value.data) ? (value.data as Designation[]) : [];
 };
 
-export default function FormTypesPage() {
+export default function DesignationsPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editingFormType, setEditingFormType] = useState<FormType>();
-  const { data, isLoading, isFetching, refetch } = useGetFormTypesQuery(
+  const [editingDesignation, setEditingDesignation] = useState<Designation>();
+  const { data, isLoading, isFetching, refetch } = useGetDesignationsQuery(
     search ? { search } : undefined,
   );
-  const [deleteFormType, { isLoading: isDeleting }] =
-    useDeleteFormTypeMutation();
+  const [deleteDesignation, { isLoading: isDeleting }] =
+    useDeleteDesignationMutation();
   const [deletingId, setDeletingId] = useState<string>();
 
   useEffect(() => {
@@ -63,41 +63,44 @@ export default function FormTypesPage() {
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
 
-  const formTypes = useMemo(() => getFormTypesFromResponse(data), [data]);
-  const filteredFormTypes = useMemo(() => {
+  const designations = useMemo(
+    () => getDesignationsFromResponse(data),
+    [data],
+  );
+  const filteredDesignations = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return formTypes;
+    if (!term) return designations;
 
-    return formTypes.filter((formType) =>
-      [formType.id, formType.name].some((value) =>
+    return designations.filter((designation) =>
+      [designation.id, designation.name].some((value) =>
         String(value ?? "").toLowerCase().includes(term),
       ),
     );
-  }, [formTypes, search]);
+  }, [designations, search]);
 
   const totalPages = Math.max(
     1,
-    Math.ceil(filteredFormTypes.length / PAGE_SIZE),
+    Math.ceil(filteredDesignations.length / PAGE_SIZE),
   );
   const visiblePage = Math.min(currentPage, totalPages);
-  const pageData = filteredFormTypes.slice(
+  const pageData = filteredDesignations.slice(
     (visiblePage - 1) * PAGE_SIZE,
     visiblePage * PAGE_SIZE,
   );
 
-  const handleDelete = async (formType: FormType) => {
+  const handleDelete = async (designation: Designation) => {
     const confirmed = window.confirm(
-      `Are you sure you want to delete "${formType.name}"?`,
+      `Are you sure you want to delete "${designation.name}"?`,
     );
     if (!confirmed) return;
 
-    setDeletingId(formType.id);
+    setDeletingId(designation.id);
     try {
-      const response = await deleteFormType(formType.id).unwrap();
+      const response = await deleteDesignation(designation.id).unwrap();
       toast.success(response.message);
       await refetch();
     } catch (error: unknown) {
-      toast.error(getApiMessage(error, "Unable to delete the form type."));
+      toast.error(getApiMessage(error, "Unable to delete the designation."));
     } finally {
       setDeletingId(undefined);
     }
@@ -109,14 +112,14 @@ export default function FormTypesPage() {
         <Input
           className="max-w-sm"
           type="text"
-          placeholder="Search form types..."
+          placeholder="Search designations..."
           value={searchInput}
           onChange={(event) => {
             setSearchInput(event.target.value);
             setCurrentPage(1);
           }}
         />
-        <Button onClick={() => setAddDialogOpen(true)}>Add Form Type</Button>
+        <Button onClick={() => setAddDialogOpen(true)}>Add Designation</Button>
       </div>
 
       <ShadcnTable
@@ -126,26 +129,26 @@ export default function FormTypesPage() {
           onPageChange: setCurrentPage,
         }}
         isLoading={isLoading || isFetching}
-        columns={formTypesListColumns(
-          setEditingFormType,
+        columns={designationsListColumns(
+          setEditingDesignation,
           handleDelete,
           isDeleting ? deletingId : undefined,
         )}
         data={pageData}
       />
 
-      <AddFormTypeDialog
+      <AddDesignationDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onCreated={refetch}
       />
 
-      {editingFormType ? (
-        <UpdateFormTypeDialog
-          formType={editingFormType}
+      {editingDesignation ? (
+        <UpdateDesignationDialog
+          designation={editingDesignation}
           open
           onOpenChange={(open) => {
-            if (!open) setEditingFormType(undefined);
+            if (!open) setEditingDesignation(undefined);
           }}
           onUpdated={refetch}
         />

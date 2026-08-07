@@ -12,6 +12,7 @@ import {
   type Editor,
   type NodeWithPos,
 } from "@tiptap/react"
+import Cookies from "js-cookie"
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
@@ -374,17 +375,53 @@ export const handleImageUpload = async (
     )
   }
 
-  // For demo/testing: Simulate upload progress. In production, replace the following code
-  // with your own upload implementation.
-  for (let progress = 0; progress <= 100; progress += 10) {
-    if (abortSignal?.aborted) {
-      throw new Error("Upload cancelled")
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    onProgress?.({ progress })
+  if (abortSignal?.aborted) {
+    throw new Error("Upload cancelled")
   }
 
-  return "/images/tiptap-ui-placeholder-image.jpg"
+  const formData = new FormData()
+  formData.append("image", file)
+
+  return new Promise<string>((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    const token = Cookies.get("pghlasdetg")
+
+    xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL}/posts/upload-image`)
+    if (token) {
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`)
+    }
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        onProgress?.({ progress: (event.loaded / event.total) * 100 })
+      }
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const data = JSON.parse(xhr.responseText)
+          const url = data?.response?.url
+          if (!url) {
+            reject(new Error("Upload response missing image URL"))
+            return
+          }
+          resolve(url)
+        } catch {
+          reject(new Error("Failed to parse upload response"))
+        }
+      } else {
+        reject(new Error(`Image upload failed with status ${xhr.status}`))
+      }
+    }
+
+    xhr.onerror = () => reject(new Error("Image upload failed"))
+    xhr.onabort = () => reject(new Error("Upload cancelled"))
+
+    abortSignal?.addEventListener("abort", () => xhr.abort())
+
+    xhr.send(formData)
+  })
 }
 
 type ProtocolOptions = {

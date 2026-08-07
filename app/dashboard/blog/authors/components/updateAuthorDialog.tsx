@@ -21,18 +21,24 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
-  FormType,
-  useUpdateFormTypeMutation,
-} from "@/redux/api/settingsApi";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AuthorEntry,
+  useUpdateAuthorEntryMutation,
+} from "@/redux/api/postsApi";
 
 const formSchema = z.object({
-  name: z.string().trim().min(1, "Form type name is required."),
+  role: z.enum(["Author", "User"]),
 });
 
-type UpdateFormTypeDialogProps = {
-  formType: FormType;
+type UpdateAuthorDialogProps = {
+  author: AuthorEntry;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdated: () => void | Promise<unknown>;
@@ -51,16 +57,16 @@ const getApiMessage = (value: unknown, fallback: string) => {
   return fallback;
 };
 
-export function UpdateFormTypeDialog({
-  formType,
+export function UpdateAuthorDialog({
+  author,
   open,
   onOpenChange,
   onUpdated,
-}: UpdateFormTypeDialogProps) {
-  const [updateFormType, { isLoading }] = useUpdateFormTypeMutation();
+}: UpdateAuthorDialogProps) {
+  const [updateAuthor, { isLoading }] = useUpdateAuthorEntryMutation();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: formType.name },
+    defaultValues: { role: author.role },
   });
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -70,15 +76,15 @@ export function UpdateFormTypeDialog({
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const response = await updateFormType({
-        id: formType.id,
-        name: values.name,
+      const response = await updateAuthor({
+        id: author.id,
+        role: values.role,
       }).unwrap();
       toast.success(response.message);
       await onUpdated();
       onOpenChange(false);
     } catch (error: unknown) {
-      toast.error(getApiMessage(error, "Unable to update the form type."));
+      toast.error(getApiMessage(error, "Unable to update the author."));
     }
   };
 
@@ -86,25 +92,37 @@ export function UpdateFormTypeDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Update Form Type</DialogTitle>
+          <DialogTitle>Update Author</DialogTitle>
         </DialogHeader>
+
+        <div className="mb-2">
+          <p className="text-sm font-semibold">{author.name}</p>
+          <p className="text-sm text-muted-foreground">{author.email}</p>
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="name"
+              name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter form type name"
-                      autoComplete="off"
-                      disabled={isLoading}
-                      {...field}
-                    />
-                  </FormControl>
+                  <FormLabel>Role</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={isLoading}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Author">Author</SelectItem>
+                      <SelectItem value="User">User</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -120,7 +138,7 @@ export function UpdateFormTypeDialog({
                 Cancel
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Updating..." : "Update Form Type"}
+                {isLoading ? "Updating..." : "Update Author"}
               </Button>
             </DialogFooter>
           </form>

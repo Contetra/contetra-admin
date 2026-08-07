@@ -23,16 +23,16 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
-  FormType,
-  useUpdateFormTypeMutation,
+  Department,
+  useUpdateDepartmentMutation,
 } from "@/redux/api/settingsApi";
 
 const formSchema = z.object({
-  name: z.string().trim().min(1, "Form type name is required."),
+  name: z.string().trim().min(1, "Department name is required."),
 });
 
-type UpdateFormTypeDialogProps = {
-  formType: FormType;
+type UpdateDepartmentDialogProps = {
+  department: Department;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdated: () => void | Promise<unknown>;
@@ -51,16 +51,16 @@ const getApiMessage = (value: unknown, fallback: string) => {
   return fallback;
 };
 
-export function UpdateFormTypeDialog({
-  formType,
+export function UpdateDepartmentDialog({
+  department,
   open,
   onOpenChange,
   onUpdated,
-}: UpdateFormTypeDialogProps) {
-  const [updateFormType, { isLoading }] = useUpdateFormTypeMutation();
+}: UpdateDepartmentDialogProps) {
+  const [updateDepartment, { isLoading }] = useUpdateDepartmentMutation();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: formType.name },
+    defaultValues: { name: department.name },
   });
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -70,15 +70,15 @@ export function UpdateFormTypeDialog({
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const response = await updateFormType({
-        id: formType.id,
+      const response = await updateDepartment({
+        id: department.id,
         name: values.name,
       }).unwrap();
       toast.success(response.message);
       await onUpdated();
       onOpenChange(false);
     } catch (error: unknown) {
-      toast.error(getApiMessage(error, "Unable to update the form type."));
+      toast.error(getApiMessage(error, "Unable to update the department."));
     }
   };
 
@@ -86,7 +86,7 @@ export function UpdateFormTypeDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Update Form Type</DialogTitle>
+          <DialogTitle>Update Department</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -99,7 +99,7 @@ export function UpdateFormTypeDialog({
                   <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter form type name"
+                      placeholder="Enter department name"
                       autoComplete="off"
                       disabled={isLoading}
                       {...field}
@@ -120,7 +120,7 @@ export function UpdateFormTypeDialog({
                 Cancel
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Updating..." : "Update Form Type"}
+                {isLoading ? "Updating..." : "Update Department"}
               </Button>
             </DialogFooter>
           </form>

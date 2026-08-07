@@ -3,19 +3,14 @@
 import * as React from "react"
 import {
   AudioWaveform,
-  BookOpen,
   Bot,
   Command,
-  Frame,
   GalleryVerticalEnd,
-  Map,
-  PieChart,
   Settings2,
   SquareTerminal,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
 
 import {
@@ -71,6 +66,10 @@ const data = {
           title: "Add a new blog",
           url: "/dashboard/blog/add-a-new-blog",
         },
+        {
+          title: "Authors",
+          url: "/dashboard/blog/authors",
+        },
       ],
     },
     {
@@ -93,29 +92,6 @@ const data = {
       ],
     },
     {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
       title: "Settings",
       url: "#",
       icon: Settings2,
@@ -129,39 +105,18 @@ const data = {
           url: "/dashboard/settings/form-types",
         },
         {
-          title: "General",
-          url: "#",
-        },
-        {
           title: "Team",
-          url: "#",
+          url: "/dashboard/settings/team",
         },
         {
-          title: "Billing",
-          url: "#",
+          title: "Departments",
+          url: "/dashboard/settings/departments",
         },
         {
-          title: "Limits",
-          url: "#",
+          title: "Designations",
+          url: "/dashboard/settings/designations",
         },
       ],
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
     },
   ],
 }
@@ -174,7 +129,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

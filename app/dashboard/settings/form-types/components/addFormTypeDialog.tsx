@@ -35,17 +35,13 @@ type AddFormTypeDialogProps = {
 };
 
 const getApiMessage = (value: unknown, fallback: string) => {
-  if (!value || typeof value !== "object") return fallback;
+  let current: unknown = value;
 
-  const record = value as Record<string, unknown>;
-  if (typeof record.message === "string") return record.message;
-
-  for (const key of ["response", "data"]) {
-    const nested = record[key];
-    if (nested && typeof nested === "object") {
-      const message = (nested as Record<string, unknown>).message;
-      if (typeof message === "string") return message;
-    }
+  for (let depth = 0; depth < 4 && current && typeof current === "object"; depth++) {
+    const record = current as Record<string, unknown>;
+    if (typeof record.message === "string") return record.message;
+    if (Array.isArray(record.message)) return record.message.join(", ");
+    current = record.data ?? record.response;
   }
 
   return fallback;

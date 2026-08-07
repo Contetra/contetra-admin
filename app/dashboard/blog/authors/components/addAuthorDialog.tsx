@@ -15,14 +15,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Form as ShadcnForm,
+  Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -30,24 +29,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Form,
-  FormType,
-  useCreateFormMutation,
-  useGetFormTypesQuery,
-  useUpdateFormMutation,
-} from "@/redux/api/settingsApi";
+import { useCreateAuthorEntryMutation } from "@/redux/api/postsApi";
+import { AppUser, useGetUsersQuery } from "@/redux/api/userApi";
 
 const formSchema = z.object({
-  form_name: z.string().trim().min(1, "Form name is required."),
-  form_type_id: z.string().min(1, "Form type is required."),
+  author_id: z.string().min(1, "Select a user."),
+  role: z.enum(["Author", "User"]),
 });
 
-type FormDialogProps = {
-  formData?: Form;
+type AddAuthorDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSaved: () => void | Promise<unknown>;
+  onCreated: () => void | Promise<unknown>;
 };
 
 const getApiMessage = (value: unknown, fallback: string) => {
@@ -63,60 +56,52 @@ const getApiMessage = (value: unknown, fallback: string) => {
   return fallback;
 };
 
-const getFormTypes = (response: unknown): FormType[] => {
-  if (Array.isArray(response)) return response as FormType[];
+const getUsersFromResponse = (response: unknown): AppUser[] => {
+  if (Array.isArray(response)) return response as AppUser[];
   if (!response || typeof response !== "object") return [];
+
   const value = response as Record<string, unknown>;
-  if (Array.isArray(value.response)) return value.response as FormType[];
-  if (value.response && typeof value.response === "object") {
-    const data = (value.response as Record<string, unknown>).data;
-    if (Array.isArray(data)) return data as FormType[];
+  const nestedResponse = value.response;
+
+  if (Array.isArray(nestedResponse)) return nestedResponse as AppUser[];
+  if (nestedResponse && typeof nestedResponse === "object") {
+    const responseData = (nestedResponse as Record<string, unknown>).data;
+    if (Array.isArray(responseData)) return responseData as AppUser[];
   }
-  return Array.isArray(value.data) ? (value.data as FormType[]) : [];
+
+  return Array.isArray(value.data) ? (value.data as AppUser[]) : [];
 };
 
-export function FormDialog({
-  formData,
+export function AddAuthorDialog({
   open,
   onOpenChange,
-  onSaved,
-}: FormDialogProps) {
-  const isEditing = Boolean(formData);
-  const { data: formTypesResponse, isLoading: formTypesLoading } =
-    useGetFormTypesQuery();
-  const formTypes = useMemo(
-    () => getFormTypes(formTypesResponse),
-    [formTypesResponse],
-  );
-  const [createForm, { isLoading: isCreating }] = useCreateFormMutation();
-  const [updateForm, { isLoading: isUpdating }] = useUpdateFormMutation();
-  const isSaving = isCreating || isUpdating;
+  onCreated,
+}: AddAuthorDialogProps) {
+  const { data: usersResponse, isLoading: usersLoading } = useGetUsersQuery();
+  const users = useMemo(() => getUsersFromResponse(usersResponse), [usersResponse]);
+  const [createAuthor, { isLoading: isCreating }] =
+    useCreateAuthorEntryMutation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      form_name: formData?.form_name ?? "",
-      form_type_id: formData?.form_type_id ?? "",
-    },
+    defaultValues: { author_id: "", role: "Author" },
   });
 
   const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen && isSaving) return;
+    if (!nextOpen && isCreating) return;
     if (!nextOpen) form.reset();
     onOpenChange(nextOpen);
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const response = formData
-        ? await updateForm({ id: formData.id, ...values }).unwrap()
-        : await createForm(values).unwrap();
+      const response = await createAuthor(values).unwrap();
       toast.success(response.message);
-      await onSaved();
+      await onCreated();
       form.reset();
       onOpenChange(false);
     } catch (error: unknown) {
-      toast.error(getApiMessage(error, `Unable to ${isEditing ? "update" : "create"} the form.`));
+      toast.error(getApiMessage(error, "Unable to add the author."));
     }
   };
 
@@ -124,43 +109,31 @@ export function FormDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Update Form" : "Add Form"}</DialogTitle>
+          <DialogTitle>Add Author</DialogTitle>
         </DialogHeader>
-        <ShadcnForm {...form}>
+
+        <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="form_name"
+              name="author_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Form Name</FormLabel>
-                  <FormControl>
-                    <Input disabled={isSaving} placeholder="Enter form name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="form_type_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Form Type</FormLabel>
+                  <FormLabel>User</FormLabel>
                   <Select
                     value={field.value}
                     onValueChange={field.onChange}
-                    disabled={isSaving || formTypesLoading}
+                    disabled={isCreating || usersLoading}
                   >
                     <FormControl>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a form type" />
+                        <SelectValue placeholder="Select a user" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {formTypes.map((formType) => (
-                        <SelectItem key={formType.id} value={formType.id}>
-                          {formType.name}
+                      {users.map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.name} ({user.email})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -169,16 +142,48 @@ export function FormDialog({
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={isCreating}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Author">Author</SelectItem>
+                      <SelectItem value="User">User</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <DialogFooter>
-              <Button type="button" variant="outline" disabled={isSaving} onClick={() => handleOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isCreating}
+                onClick={() => handleOpenChange(false)}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSaving || formTypesLoading}>
-                {isSaving ? "Saving..." : isEditing ? "Update Form" : "Add Form"}
+              <Button type="submit" disabled={isCreating || usersLoading}>
+                {isCreating ? "Adding..." : "Add Author"}
               </Button>
             </DialogFooter>
           </form>
-        </ShadcnForm>
+        </Form>
       </DialogContent>
     </Dialog>
   );

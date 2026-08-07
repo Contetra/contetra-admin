@@ -1,0 +1,84 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { convertUTCtoIST, truncateLabelTable } from "@/lib/utils";
+import type { AuthorEntry } from "@/redux/api/postsApi";
+import { ColumnDef, HeaderContext } from "@tanstack/react-table";
+import { ArrowUpDown } from "lucide-react";
+
+const sortableHeader = (label: string) =>
+  function SortableHeader({ column }: HeaderContext<AuthorEntry, unknown>) {
+    return (
+      <Button
+        variant="ghost"
+        className="m-0 p-0"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        {label}
+        <ArrowUpDown className="h-4 w-4" />
+      </Button>
+    );
+  };
+
+export const authorsListColumns = (
+  onUpdate: (author: AuthorEntry) => void,
+  onDelete: (author: AuthorEntry) => void,
+  deletingId?: string,
+): ColumnDef<AuthorEntry>[] => [
+  {
+    accessorKey: "name",
+    header: sortableHeader("Name"),
+    cell: ({ row }) => <span>{truncateLabelTable(row.original.name)}</span>,
+  },
+  {
+    accessorKey: "email",
+    header: sortableHeader("Email"),
+    cell: ({ row }) => <span>{truncateLabelTable(row.original.email)}</span>,
+  },
+  {
+    accessorKey: "role",
+    header: sortableHeader("Role"),
+    cell: ({ row }) => <span>{row.original.role}</span>,
+  },
+  {
+    accessorKey: "created_at",
+    header: sortableHeader("Created At"),
+    cell: ({ row }) => <span>{convertUTCtoIST(row.original.created_at)}</span>,
+  },
+  {
+    accessorKey: "updated_at",
+    header: sortableHeader("Updated At"),
+    cell: ({ row }) => <span>{convertUTCtoIST(row.original.updated_at)}</span>,
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    enableHiding: false,
+    cell: ({ row }) => {
+      const isDeleting = deletingId === row.original.id;
+
+      return (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="cursor-pointer"
+            disabled={Boolean(deletingId)}
+            onClick={() => onUpdate(row.original)}
+          >
+            Update
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="cursor-pointer"
+            disabled={Boolean(deletingId)}
+            onClick={() => onDelete(row.original)}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+        </div>
+      );
+    },
+  },
+];

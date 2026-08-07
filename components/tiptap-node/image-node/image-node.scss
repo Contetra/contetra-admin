@@ -28,4 +28,91 @@
   .tiptap-thread img {
     margin: 0;
   }
+
+  // Resize handles for the built-in Image resize NodeView.
+  // The handles themselves ship unstyled (bare positioned divs), so we
+  // give them a visible, draggable affordance here.
+  [data-resize-container][data-node="image"] {
+    [data-resize-handle] {
+      width: 0.625rem;
+      height: 0.625rem;
+      background: var(--tt-brand-color-500);
+      border: 1.5px solid var(--white, #fff);
+      border-radius: 999px;
+      opacity: 0;
+      transition: opacity 0.1s ease;
+      z-index: 2;
+
+      &[data-resize-handle="top-left"] {
+        cursor: nwse-resize;
+        transform: translate(-50%, -50%);
+      }
+      &[data-resize-handle="top-right"] {
+        cursor: nesw-resize;
+        transform: translate(50%, -50%);
+      }
+      &[data-resize-handle="bottom-left"] {
+        cursor: nesw-resize;
+        transform: translate(-50%, 50%);
+      }
+      &[data-resize-handle="bottom-right"] {
+        cursor: nwse-resize;
+        transform: translate(50%, 50%);
+      }
+    }
+
+    .tiptap-image-delete-btn {
+      position: absolute;
+      top: -0.5rem;
+      right: -0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.25rem;
+      height: 1.25rem;
+      padding: 0;
+      border: 1.5px solid var(--white, #fff);
+      border-radius: 999px;
+      background: var(--tt-color-red, #e5484d);
+      color: var(--white, #fff);
+      font-size: 0.875rem;
+      line-height: 1;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.1s ease;
+      z-index: 3;
+
+      &:hover {
+        background: var(--tt-color-red-dark, #c82f34);
+      }
+    }
+
+    &:hover [data-resize-handle],
+    &.ProseMirror-selectednode [data-resize-handle],
+    &[data-resize-state="true"] [data-resize-handle],
+    &:hover .tiptap-image-delete-btn,
+    &.ProseMirror-selectednode .tiptap-image-delete-btn,
+    &[data-resize-state="true"] .tiptap-image-delete-btn {
+      opacity: 1;
+    }
+
+    // The resize NodeView moves the ProseMirror-selectednode class from the
+    // <img> itself to this wrapping container, so re-apply the selection
+    // outline here to match the non-resizable node types.
+    &.ProseMirror-selectednode img {
+      outline: 0.125rem solid var(--tt-brand-color-500);
+      border-radius: var(--tt-radius-xs, 0.25rem);
+    }
+  }
+}
+
+.tiptap-image-align-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.25rem;
+  background: var(--tt-toolbar-bg-color);
+  border: 1px solid var(--tt-toolbar-border-color);
+  border-radius: var(--tt-radius-md, 0.5rem);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.12);
 }
