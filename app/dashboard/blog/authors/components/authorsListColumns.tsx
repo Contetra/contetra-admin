@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { convertUTCtoIST, truncateLabelTable } from "@/lib/utils";
+import { truncateLabelTable } from "@/lib/utils";
 import type { AuthorEntry } from "@/redux/api/postsApi";
 import { ColumnDef, HeaderContext } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
@@ -21,7 +21,6 @@ const sortableHeader = (label: string) =>
   };
 
 export const authorsListColumns = (
-  onUpdate: (author: AuthorEntry) => void,
   onDelete: (author: AuthorEntry) => void,
   deletingId?: string,
 ): ColumnDef<AuthorEntry>[] => [
@@ -36,38 +35,14 @@ export const authorsListColumns = (
     cell: ({ row }) => <span>{truncateLabelTable(row.original.email)}</span>,
   },
   {
-    accessorKey: "role",
-    header: sortableHeader("Role"),
-    cell: ({ row }) => <span>{row.original.role}</span>,
-  },
-  {
-    accessorKey: "created_at",
-    header: sortableHeader("Created At"),
-    cell: ({ row }) => <span>{convertUTCtoIST(row.original.created_at)}</span>,
-  },
-  {
-    accessorKey: "updated_at",
-    header: sortableHeader("Updated At"),
-    cell: ({ row }) => <span>{convertUTCtoIST(row.original.updated_at)}</span>,
-  },
-  {
     id: "actions",
     header: "Actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const isDeleting = deletingId === row.original.id;
+      const isDeleting = deletingId === row.original.user_id;
 
       return (
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="cursor-pointer"
-            disabled={Boolean(deletingId)}
-            onClick={() => onUpdate(row.original)}
-          >
-            Update
-          </Button>
           <Button
             variant="destructive"
             size="sm"
@@ -75,7 +50,7 @@ export const authorsListColumns = (
             disabled={Boolean(deletingId)}
             onClick={() => onDelete(row.original)}
           >
-            {isDeleting ? "Deleting..." : "Delete"}
+            {isDeleting ? "Removing..." : "Remove"}
           </Button>
         </div>
       );

@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AddAuthorDialog } from "./components/addAuthorDialog";
 import { authorsListColumns } from "./components/authorsListColumns";
-import { UpdateAuthorDialog } from "./components/updateAuthorDialog";
 
 const PAGE_SIZE = 10;
 
@@ -50,7 +49,6 @@ export default function AuthorsPage() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editingAuthor, setEditingAuthor] = useState<AuthorEntry>();
   const { data, isLoading, isFetching, refetch } = useGetAuthorsAdminQuery(
     search ? { search } : undefined,
   );
@@ -69,7 +67,7 @@ export default function AuthorsPage() {
     if (!term) return authors;
 
     return authors.filter((author) =>
-      [author.id, author.name, author.email].some((value) =>
+      [author.user_id, author.name, author.email].some((value) =>
         String(value ?? "").toLowerCase().includes(term),
       ),
     );
@@ -88,9 +86,9 @@ export default function AuthorsPage() {
     );
     if (!confirmed) return;
 
-    setDeletingId(author.id);
+    setDeletingId(author.user_id);
     try {
-      const response = await deleteAuthor(author.id).unwrap();
+      const response = await deleteAuthor(author.user_id).unwrap();
       toast.success(response.message);
       await refetch();
     } catch (error: unknown) {
@@ -124,7 +122,6 @@ export default function AuthorsPage() {
         }}
         isLoading={isLoading || isFetching}
         columns={authorsListColumns(
-          setEditingAuthor,
           handleDelete,
           isDeleting ? deletingId : undefined,
         )}
@@ -136,17 +133,6 @@ export default function AuthorsPage() {
         onOpenChange={setAddDialogOpen}
         onCreated={refetch}
       />
-
-      {editingAuthor ? (
-        <UpdateAuthorDialog
-          author={editingAuthor}
-          open
-          onOpenChange={(open) => {
-            if (!open) setEditingAuthor(undefined);
-          }}
-          onUpdated={refetch}
-        />
-      ) : null}
     </div>
   );
 }

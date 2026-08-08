@@ -1,16 +1,10 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import baseQueryWithAuth from "../middleware/middlewareBaseQuery";
 
-export type AuthorRole = "User" | "Author";
-
 export type AuthorEntry = {
-  id: string;
   user_id: string;
   name: string;
   email: string;
-  role: AuthorRole;
-  created_at: string;
-  updated_at: string;
 };
 
 type GetAuthorsListQuery = {
@@ -73,7 +67,7 @@ export const postsApi = createApi({
 
     createAuthorEntry: builder.mutation<
       MutationMessage,
-      { author_id: string; role: AuthorRole }
+      { author_id: string }
     >({
       query: (body) => ({
         url: "/common-rest/create-author",
@@ -81,18 +75,6 @@ export const postsApi = createApi({
         body,
       }),
       transformResponse: () => ({ message: "Author created successfully." }),
-    }),
-
-    updateAuthorEntry: builder.mutation<
-      MutationMessage,
-      { id: string; role: AuthorRole }
-    >({
-      query: ({ id, role }) => ({
-        url: `/common-rest/update-authors/${id}`,
-        method: "PATCH",
-        body: { role },
-      }),
-      transformResponse: () => ({ message: "Author updated successfully." }),
     }),
 
     deleteAuthorEntry: builder.mutation<MutationMessage, string>({
@@ -115,6 +97,5 @@ export const {
   useLazyGetBlogContentQuery,
   useGetAuthorsAdminQuery,
   useCreateAuthorEntryMutation,
-  useUpdateAuthorEntryMutation,
   useDeleteAuthorEntryMutation,
 } = postsApi;
