@@ -34,7 +34,6 @@ import { AppUser, useGetUsersQuery } from "@/redux/api/userApi";
 
 const formSchema = z.object({
   author_id: z.string().min(1, "Select a user."),
-  role: z.enum(["Author", "User"]),
 });
 
 type AddAuthorDialogProps = {
@@ -84,7 +83,7 @@ export function AddAuthorDialog({
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { author_id: "", role: "Author" },
+    defaultValues: { author_id: "" },
   });
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -136,32 +135,6 @@ export function AddAuthorDialog({
                           {user.name} ({user.email})
                         </SelectItem>
                       ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={isCreating}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Author">Author</SelectItem>
-                      <SelectItem value="User">User</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
