@@ -7,6 +7,7 @@ import {
   Command,
   GalleryVerticalEnd,
   Settings2,
+  ShieldCheck,
   SquareTerminal,
 } from "lucide-react"
 
@@ -115,6 +116,21 @@ const data = {
         {
           title: "Designations",
           url: "/dashboard/settings/designations",
+        },
+      ],
+    },
+    {
+      title: "RBAC",
+      url: "#",
+      icon: ShieldCheck,
+      items: [
+        {
+          title: "Roles",
+          url: "/dashboard/rbac/roles",
+        },
+        {
+          title: "User Roles",
+          url: "/dashboard/rbac/user-roles",
         },
       ],
     },

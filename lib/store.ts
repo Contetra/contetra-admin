@@ -1,6 +1,7 @@
 import { authApi } from "@/redux/api/authApi";
 import { emailsApi } from "@/redux/api/emailsApi";
 import { postsApi } from "@/redux/api/postsApi";
+import { rbacApi } from "@/redux/api/rbacApi";
 import { settingsApi } from "@/redux/api/settingsApi";
 import { userApi } from "@/redux/api/userApi";
 import { configureStore } from "@reduxjs/toolkit";
@@ -13,6 +14,7 @@ export const store = () => {
       [emailsApi.reducerPath]: emailsApi.reducer,
       [settingsApi.reducerPath]: settingsApi.reducer,
       [userApi.reducerPath]: userApi.reducer,
+      [rbacApi.reducerPath]: rbacApi.reducer,
     },
 
     middleware: (getDefaultMiddleware) =>
@@ -22,6 +24,7 @@ export const store = () => {
         emailsApi.middleware,
         settingsApi.middleware,
         userApi.middleware,
+        rbacApi.middleware,
       ]),
   });
 };
