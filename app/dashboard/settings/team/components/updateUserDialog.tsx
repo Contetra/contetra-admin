@@ -37,6 +37,7 @@ import {
   useGetDesignationsQuery,
 } from "@/redux/api/settingsApi";
 import { AppUser, useUpdateUserMutation } from "@/redux/api/userApi";
+import { ProfilePhotoField } from "./profilePhotoField";
 
 const NO_DEPARTMENT = "none";
 const NO_DESIGNATION = "none";
@@ -46,6 +47,12 @@ const formSchema = z
     name: z.string().trim().min(1, "Name is required."),
     user_name: z.string().trim().min(1, "Username is required."),
     email: z.string().trim().email("Enter a valid email address."),
+    profile_picture_url: z
+      .string()
+      .trim()
+      .refine((value) => value.length === 0 || value.startsWith("/"), {
+        message: "The CDN image path must start with /.",
+      }),
     password: z
       .string()
       .trim()
@@ -144,6 +151,7 @@ export function UpdateUserDialog({
       name: user.name,
       user_name: user.user_name,
       email: user.email,
+      profile_picture_url: user.profile_picture_url ?? "",
       password: "",
       department_id: user.department_id ?? NO_DEPARTMENT,
       designation_id: user.designation_id ?? NO_DESIGNATION,
@@ -162,6 +170,7 @@ export function UpdateUserDialog({
         name: values.name,
         user_name: values.user_name,
         email: values.email,
+        profile_picture_url: values.profile_picture_url || null,
         ...(values.password ? { password: values.password } : {}),
         department_id:
           values.department_id && values.department_id !== NO_DEPARTMENT
@@ -240,6 +249,25 @@ export function UpdateUserDialog({
                       placeholder="Enter email address"
                       autoComplete="off"
                       {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="profile_picture_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Profile photo</FormLabel>
+                  <FormControl>
+                    <ProfilePhotoField
+                      value={field.value}
+                      memberName={form.watch("name")}
+                      onChange={field.onChange}
+                      disabled={isUpdating}
                     />
                   </FormControl>
                   <FormMessage />

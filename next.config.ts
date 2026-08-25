@@ -7,6 +7,16 @@ const nextConfig: NextConfig = {
       allowedOrigins: ["admin.contetra.com", "www.admin.contetra.com"],
     },
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${
+          process.env.BACKEND_URL ?? "http://localhost:5555"
+        }/:path*`,
+      },
+    ];
+  },
   async headers() {
     return [
       {

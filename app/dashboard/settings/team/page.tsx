@@ -14,6 +14,7 @@ import { usersListColumns } from "./components/usersListColumns";
 import { UserDetailsDialog } from "./components/userDetailsDialog";
 import { AddUserDialog } from "./components/addUserDialog";
 import { UpdateUserDialog } from "./components/updateUserDialog";
+import { ArrangeUsersDialog } from "./components/arrangeUsersDialog";
 
 const PAGE_SIZE = 10;
 
@@ -53,6 +54,7 @@ export default function TeamPage() {
   const [viewingUser, setViewingUser] = useState<AppUser>();
   const [editingUser, setEditingUser] = useState<AppUser>();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [arrangeDialogOpen, setArrangeDialogOpen] = useState(false);
   const { data, isLoading, isFetching, refetch } = useGetUsersQuery(
     search ? { search } : undefined,
   );
@@ -104,7 +106,15 @@ export default function TeamPage() {
             setCurrentPage(1);
           }}
         />
-        <Button onClick={() => setAddDialogOpen(true)}>Add User</Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setArrangeDialogOpen(true)}
+          >
+            Arrange
+          </Button>
+          <Button onClick={() => setAddDialogOpen(true)}>Add User</Button>
+        </div>
       </div>
 
       <ShadcnTable
@@ -148,6 +158,13 @@ export default function TeamPage() {
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onCreated={refetch}
+      />
+
+      <ArrangeUsersDialog
+        users={users}
+        open={arrangeDialogOpen}
+        onOpenChange={setArrangeDialogOpen}
+        onSaved={refetch}
       />
     </div>
   );

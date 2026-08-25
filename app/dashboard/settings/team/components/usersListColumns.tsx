@@ -54,6 +54,11 @@ export const usersListColumns = (
     cell: ({ row }) => <span>{row.original.designation ?? "—"}</span>,
   },
   {
+    accessorKey: "order",
+    header: "Order",
+    cell: ({ row }) => <span>{row.original.order ?? "—"}</span>,
+  },
+  {
     id: "actions",
     header: "Actions",
     enableHiding: false,

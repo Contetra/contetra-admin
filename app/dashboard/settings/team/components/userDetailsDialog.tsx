@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { convertUTCtoIST } from "@/lib/utils";
 import type { AppUser } from "@/redux/api/userApi";
+import { teamPhotoSrc } from "./profilePhotoField";
 
 type UserDetailsDialogProps = {
   user: AppUser;
@@ -50,12 +51,15 @@ export function UserDetailsDialog({
         </DialogHeader>
 
         <div className="flex items-center gap-3">
-          <Avatar className="size-12">
+          <Avatar className="aspect-498/562 size-auto w-16 rounded-md">
             <AvatarImage
-              src={user.profile_picture_url ?? undefined}
+              src={teamPhotoSrc(user.profile_picture_url)}
               alt={user.name}
+              className="aspect-auto object-cover object-top"
             />
-            <AvatarFallback>{initials || "U"}</AvatarFallback>
+            <AvatarFallback className="rounded-md">
+              {initials || "U"}
+            </AvatarFallback>
           </Avatar>
           <div>
             <p className="text-sm font-semibold">{user.name}</p>
@@ -68,12 +72,13 @@ export function UserDetailsDialog({
           <DetailRow label="Username" value={user.user_name} />
           <DetailRow label="Department" value={user.department ?? "—"} />
           <DetailRow label="Designation" value={user.designation ?? "—"} />
+          <DetailRow label="Order" value={user.order ?? "—"} />
           <DetailRow
             label="Profile Picture URL"
             value={
               user.profile_picture_url ? (
                 <a
-                  href={user.profile_picture_url}
+                  href={teamPhotoSrc(user.profile_picture_url)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="truncate text-blue-600 hover:underline"

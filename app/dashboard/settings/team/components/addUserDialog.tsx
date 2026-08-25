@@ -37,6 +37,7 @@ import {
   useGetDesignationsQuery,
 } from "@/redux/api/settingsApi";
 import { useCreateUserMutation } from "@/redux/api/userApi";
+import { ProfilePhotoField } from "./profilePhotoField";
 
 const NO_DEPARTMENT = "none";
 const NO_DESIGNATION = "none";
@@ -46,6 +47,12 @@ const formSchema = z
     name: z.string().trim().min(1, "Name is required."),
     user_name: z.string().trim().min(1, "Username is required."),
     email: z.string().trim().email("Enter a valid email address."),
+    profile_picture_url: z
+      .string()
+      .trim()
+      .refine((value) => value.length === 0 || value.startsWith("/"), {
+        message: "The CDN image path must start with /.",
+      }),
     password: z.string().min(8, "Password must be at least 8 characters."),
     department_id: z.string().optional(),
     designation_id: z.string().optional(),
@@ -137,6 +144,7 @@ export function AddUserDialog({
       name: "",
       user_name: "",
       email: "",
+      profile_picture_url: "",
       password: "",
       department_id: NO_DEPARTMENT,
       designation_id: NO_DESIGNATION,
@@ -156,6 +164,9 @@ export function AddUserDialog({
         user_name: values.user_name,
         email: values.email,
         password: values.password,
+        ...(values.profile_picture_url
+          ? { profile_picture_url: values.profile_picture_url }
+          : {}),
         ...(values.department_id && values.department_id !== NO_DEPARTMENT
           ? { department_id: values.department_id }
           : {}),
@@ -232,6 +243,25 @@ export function AddUserDialog({
                       placeholder="Enter email address"
                       autoComplete="off"
                       {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="profile_picture_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Profile photo</FormLabel>
+                  <FormControl>
+                    <ProfilePhotoField
+                      value={field.value}
+                      memberName={form.watch("name")}
+                      onChange={field.onChange}
+                      disabled={isCreating}
                     />
                   </FormControl>
                   <FormMessage />

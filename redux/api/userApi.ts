@@ -10,6 +10,7 @@ export type AppUser = {
   department_id: string | null;
   designation: string | null;
   designation_id: string | null;
+  order: number | null;
   profile_picture_url: string | null;
   two_fa_status: "enabled" | "disabled" | "not_allowed";
   last_login: string;
@@ -28,6 +29,7 @@ type CreateUserBody = {
   password: string;
   department_id?: string;
   designation_id?: string;
+  profile_picture_url?: string | null;
 };
 
 type UpdateUserBody = {
@@ -38,6 +40,7 @@ type UpdateUserBody = {
   password?: string;
   department_id?: string | null;
   designation_id?: string | null;
+  profile_picture_url?: string | null;
 };
 
 type MutationMessage = {
@@ -83,6 +86,45 @@ export const userApi = createApi({
       }),
       transformResponse: () => ({ message: "User deleted successfully." }),
     }),
+
+    reorderUsers: builder.mutation<MutationMessage, string[]>({
+      query: (user_ids) => ({
+        url: "/users/reorder-users",
+        method: "PATCH",
+        body: { user_ids },
+      }),
+      transformResponse: () => ({
+        message: "Team order updated successfully.",
+      }),
+    }),
+
+    uploadUserPhoto: builder.mutation<
+      { url: string },
+      { file: File; name: string }
+    >({
+      query: ({ file, name }) => {
+        const body = new FormData();
+        body.append("image", file);
+        body.append("name", name);
+        return {
+          url: "/users/upload-photo",
+          method: "POST",
+          body,
+        };
+      },
+      transformResponse: (response: { response?: { url?: string } }) => ({
+        url: response?.response?.url ?? "",
+      }),
+    }),
+
+    deleteUserPhoto: builder.mutation<MutationMessage, string>({
+      query: (url) => ({
+        url: "/users/delete-photo",
+        method: "POST",
+        body: { url },
+      }),
+      transformResponse: () => ({ message: "Photo deleted successfully." }),
+    }),
   }),
 });
 
@@ -92,4 +134,7 @@ export const {
   useCreateUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useReorderUsersMutation,
+  useUploadUserPhotoMutation,
+  useDeleteUserPhotoMutation,
 } = userApi;
