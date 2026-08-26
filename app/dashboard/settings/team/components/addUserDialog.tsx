@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   Department,
   Designation,
@@ -45,20 +46,28 @@ const NO_DESIGNATION = "none";
 const formSchema = z.object({
   name: z.string().trim().min(1, "Name is required."),
   user_name: z.string().trim().min(1, "Username is required."),
-  email: z.string().trim().email("Enter a valid email address."),
+  email: z
+    .string()
+    .trim()
+    .refine(
+      (value) => value.length === 0 || z.string().email().safeParse(value).success,
+      { message: "Enter a valid email address." },
+    ),
   profile_picture_url: z
     .string()
     .trim()
     .refine((value) => value.length === 0 || value.startsWith("/"), {
       message: "The CDN image path must start with /.",
     }),
-  password: z.string().min(8, "Password must be at least 8 characters."),
-  department_id: z.string().optional(),
-  designation_id: z
+  password: z
     .string()
-    .refine((value) => value.length > 0 && value !== NO_DESIGNATION, {
-      message: "Designation is required.",
+    .trim()
+    .refine((value) => value.length === 0 || value.length >= 8, {
+      message: "Password must be at least 8 characters.",
     }),
+  department_id: z.string().optional(),
+  designation_id: z.string().optional(),
+  show_on_website: z.boolean(),
 });
 
 type AddUserDialogProps = {
@@ -141,6 +150,7 @@ export function AddUserDialog({
       password: "",
       department_id: NO_DEPARTMENT,
       designation_id: NO_DESIGNATION,
+      show_on_website: true,
     },
   });
 
@@ -155,15 +165,18 @@ export function AddUserDialog({
       const response = await createUser({
         name: values.name,
         user_name: values.user_name,
-        email: values.email,
-        password: values.password,
+        ...(values.email ? { email: values.email } : {}),
+        ...(values.password ? { password: values.password } : {}),
         ...(values.profile_picture_url
           ? { profile_picture_url: values.profile_picture_url }
           : {}),
         ...(values.department_id && values.department_id !== NO_DEPARTMENT
           ? { department_id: values.department_id }
           : {}),
-        designation_id: values.designation_id,
+        ...(values.designation_id && values.designation_id !== NO_DESIGNATION
+          ? { designation_id: values.designation_id }
+          : {}),
+        show_on_website: values.show_on_website,
       }).unwrap();
       toast.success(response.message);
       await onCreated();
@@ -176,13 +189,16 @@ export function AddUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add User</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="grid grid-cols-1 gap-4 sm:grid-cols-3"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -226,7 +242,7 @@ export function AddUserDialog({
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Email (optional)</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
@@ -245,7 +261,7 @@ export function AddUserDialog({
               control={form.control}
               name="profile_picture_url"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="sm:col-span-3">
                   <FormLabel>Profile photo</FormLabel>
                   <FormControl>
                     <ProfilePhotoField
@@ -265,12 +281,12 @@ export function AddUserDialog({
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>Password (optional)</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
                       disabled={isCreating}
-                      placeholder="Enter a strong password"
+                      placeholder="Leave blank for no login access"
                       autoComplete="new-password"
                       {...field}
                     />
@@ -343,7 +359,30 @@ export function AddUserDialog({
               )}
             />
 
-            <DialogFooter>
+            <FormField
+              control={form.control}
+              name="show_on_website"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-md border px-3 py-2 sm:col-span-3">
+                  <div className="space-y-0.5">
+                    <FormLabel>Show on website</FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      Controls whether this member appears on the About Us
+                      page, independent of department/designation.
+                    </p>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isCreating}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter className="sm:col-span-3">
               <Button
                 type="button"
                 variant="outline"

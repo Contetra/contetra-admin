@@ -34,7 +34,9 @@ export const usersListColumns = (
   {
     accessorKey: "email",
     header: sortableHeader("Email"),
-    cell: ({ row }) => <span>{truncateLabelTable(row.original.email)}</span>,
+    cell: ({ row }) => (
+      <span>{truncateLabelTable(row.original.email ?? "—")}</span>
+    ),
   },
   {
     accessorKey: "user_name",
@@ -57,6 +59,13 @@ export const usersListColumns = (
     accessorKey: "order",
     header: "Order",
     cell: ({ row }) => <span>{row.original.order ?? "—"}</span>,
+  },
+  {
+    accessorKey: "show_on_website",
+    header: "Visible",
+    cell: ({ row }) => (
+      <span>{row.original.show_on_website ? "Yes" : "No"}</span>
+    ),
   },
   {
     id: "actions",

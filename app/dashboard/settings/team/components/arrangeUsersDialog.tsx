@@ -55,7 +55,7 @@ export function ArrangeUsersDialog({
 
     setOrderedUsers(
       [...users]
-        .filter((user) => user.designation_id)
+        .filter((user) => user.show_on_website)
         .sort((left, right) => {
           const leftOrder = left.order ?? Number.MAX_SAFE_INTEGER;
           const rightOrder = right.order ?? Number.MAX_SAFE_INTEGER;
@@ -80,7 +80,7 @@ export function ArrangeUsersDialog({
   const handleSave = async () => {
     if (orderedUsers.length === 0) {
       toast.error(
-        "Assign designations before arranging team members.",
+        "Enable \"Show on website\" for team members before arranging them.",
       );
       return;
     }
@@ -105,14 +105,14 @@ export function ArrangeUsersDialog({
         </DialogHeader>
 
         <p className="text-sm text-muted-foreground">
-          Only members with a designation can be ordered. This is the
-          sequence rendered on the website.
+          Only members with &quot;Show on website&quot; enabled can be
+          ordered. This is the sequence rendered on the website.
         </p>
 
         <div className="max-h-[50vh] space-y-2 overflow-y-auto">
           {orderedUsers.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No members with a designation yet.
+              No visible members yet.
             </p>
           ) : (
             orderedUsers.map((user, index) => (
@@ -125,8 +125,9 @@ export function ArrangeUsersDialog({
                     {index + 1}. {user.name}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {user.designation ?? "No designation"}
-                    {user.department ? ` · ${user.department}` : ""}
+                    {[user.designation, user.department]
+                      .filter(Boolean)
+                      .join(" · ") || "No department or designation"}
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-1">

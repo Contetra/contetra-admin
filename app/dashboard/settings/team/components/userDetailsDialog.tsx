@@ -63,7 +63,9 @@ export function UserDetailsDialog({
           </Avatar>
           <div>
             <p className="text-sm font-semibold">{user.name}</p>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
+            <p className="text-sm text-muted-foreground">
+              {user.email ?? "No email"}
+            </p>
           </div>
         </div>
 

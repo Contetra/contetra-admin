@@ -5,11 +5,12 @@ export type AppUser = {
   id: string;
   name: string;
   user_name: string;
-  email: string;
+  email: string | null;
   department: string | null;
   department_id: string | null;
   designation: string | null;
   designation_id: string | null;
+  show_on_website: boolean | null;
   order: number | null;
   profile_picture_url: string | null;
   two_fa_status: "enabled" | "disabled" | "not_allowed";
@@ -25,10 +26,11 @@ type GetUsersQuery = {
 type CreateUserBody = {
   name: string;
   user_name: string;
-  email: string;
-  password: string;
+  email?: string;
+  password?: string;
   department_id?: string;
-  designation_id: string;
+  designation_id?: string;
+  show_on_website?: boolean;
   profile_picture_url?: string | null;
 };
 
@@ -36,10 +38,11 @@ type UpdateUserBody = {
   id: string;
   name?: string;
   user_name?: string;
-  email?: string;
+  email?: string | null;
   password?: string;
   department_id?: string | null;
   designation_id?: string | null;
+  show_on_website?: boolean;
   profile_picture_url?: string | null;
 };
 
