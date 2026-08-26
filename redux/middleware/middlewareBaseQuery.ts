@@ -5,6 +5,7 @@ import {
 } from "@reduxjs/toolkit/query/react";
 import type { BaseQueryFn } from "@reduxjs/toolkit/query";
 import Cookies from "js-cookie";
+import { performLogout } from "@/lib/logout";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: process.env.NEXT_PUBLIC_API_URL,
@@ -26,9 +27,10 @@ const baseQueryWithAuth: BaseQueryFn<
 > = async (args, api, extraOptions) => {
   const result = await baseQuery(args, api, extraOptions);
 
-  if (result.error?.status === 403) {
-    Cookies.remove("pghlasdetg");
-    window.location.href = "/";
+  // 401 = missing/expired/invalid token, 403 = forbidden; both mean the
+  // session is no longer valid, so send the user back to login.
+  if (result.error?.status === 401 || result.error?.status === 403) {
+    performLogout();
   }
 
   return result;

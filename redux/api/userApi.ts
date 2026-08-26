@@ -28,7 +28,7 @@ type CreateUserBody = {
   email: string;
   password: string;
   department_id?: string;
-  designation_id?: string;
+  designation_id: string;
   profile_picture_url?: string | null;
 };
 

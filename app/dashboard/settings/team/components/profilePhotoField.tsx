@@ -9,8 +9,10 @@ import {
   useDeleteUserPhotoMutation,
   useUploadUserPhotoMutation,
 } from "@/redux/api/userApi";
+import { ImageCropDialog } from "./imageCropDialog";
 
 const MAX_PHOTO_BYTES = 1 * 1024 * 1024;
+const MAX_SOURCE_BYTES = 20 * 1024 * 1024;
 
 const CDN_BASE = (
   process.env.NEXT_PUBLIC_CDN_URL ?? "https://contetra.b-cdn.net"
@@ -58,6 +60,8 @@ export function ProfilePhotoField({
   const [isBusy, setIsBusy] = useState(false);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
   const [previewFailed, setPreviewFailed] = useState(false);
+  const [pendingImageSrc, setPendingImageSrc] = useState<string | null>(null);
+  const [pendingFileName, setPendingFileName] = useState("");
 
   // Selected-file previews are object URLs, so they have to be revoked
   // once they are replaced or the dialog unmounts.
@@ -66,6 +70,12 @@ export function ProfilePhotoField({
       if (localPreview) URL.revokeObjectURL(localPreview);
     };
   }, [localPreview]);
+
+  useEffect(() => {
+    return () => {
+      if (pendingImageSrc) URL.revokeObjectURL(pendingImageSrc);
+    };
+  }, [pendingImageSrc]);
 
   const preview = localPreview ?? teamPhotoSrc(value);
 
@@ -80,16 +90,48 @@ export function ProfilePhotoField({
     });
   };
 
-  const handleUpload = async (file: File) => {
-    if (file.size > MAX_PHOTO_BYTES) {
-      toast.error("The photo must be 1MB or smaller.");
+  const handleFileSelected = (file: File) => {
+    if (!memberName.trim()) {
+      toast.error("Enter the team member's name before uploading a photo.");
       if (inputRef.current) inputRef.current.value = "";
       return;
     }
 
-    if (!memberName.trim()) {
-      toast.error("Enter the team member's name before uploading a photo.");
+    if (file.size > MAX_SOURCE_BYTES) {
+      toast.error("The photo must be 20MB or smaller.");
       if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    setPendingImageSrc((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return objectUrl;
+    });
+    setPendingFileName(file.name);
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const handleCropCancel = () => {
+    setPendingImageSrc((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
+    setPendingFileName("");
+  };
+
+  const handleCropped = (file: File) => {
+    setPendingImageSrc((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
+    setPendingFileName("");
+    void handleUpload(file);
+  };
+
+  const handleUpload = async (file: File) => {
+    if (file.size > MAX_PHOTO_BYTES) {
+      toast.error("The photo must be 1MB or smaller.");
       return;
     }
 
@@ -183,13 +225,12 @@ export function ProfilePhotoField({
         className="cursor-pointer"
         onChange={(event) => {
           const file = event.target.files?.[0];
-          if (file) void handleUpload(file);
+          if (file) handleFileSelected(file);
         }}
       />
       <p className="text-xs text-muted-foreground">
-        JPEG, PNG, WebP or GIF up to 1MB. The file is stored as the member&apos;s
-        name (for example tejas-savla.jpg). Use a portrait photo around 498×562
-        for a consistent look on the website.
+        JPEG, PNG, WebP or GIF up to 20MB. You&apos;ll crop it to 498×562
+        before it&apos;s uploaded, matching how it appears on the website.
       </p>
 
       <Input
@@ -198,6 +239,16 @@ export function ProfilePhotoField({
         placeholder="Uploaded path appears here"
         className="bg-muted"
       />
+
+      {pendingImageSrc ? (
+        <ImageCropDialog
+          open
+          imageSrc={pendingImageSrc}
+          fileName={pendingFileName}
+          onCancel={handleCropCancel}
+          onCropped={handleCropped}
+        />
+      ) : null}
     </div>
   );
 }
