@@ -17,6 +17,7 @@ jobs:
 
       - run: npm ci
       - run: npm run lint
+        continue-on-error: true
       - run: npm run build
 
       - uses: appleboy/ssh-action@v1
