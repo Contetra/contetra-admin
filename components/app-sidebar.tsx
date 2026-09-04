@@ -71,6 +71,10 @@ const data = {
           title: "Authors",
           url: "/dashboard/blog/authors",
         },
+        {
+          title: "Categories",
+          url: "/dashboard/blog/categories",
+        },
       ],
     },
     {

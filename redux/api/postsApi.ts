@@ -7,9 +7,41 @@ export type AuthorEntry = {
   email: string;
 };
 
+export type CategoryStatus = "Draft" | "Published";
+
+export type CategoryEntry = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  status: CategoryStatus;
+  created_at: string;
+  updated_at: string;
+};
+
 type GetAuthorsListQuery = {
   authorid?: string;
   search?: string;
+};
+
+type GetCategoriesListQuery = {
+  categoryid?: string;
+  search?: string;
+};
+
+type CreateCategoryBody = {
+  name: string;
+  slug: string;
+  description?: string;
+  status?: CategoryStatus;
+};
+
+type UpdateCategoryBody = {
+  id: string;
+  name?: string;
+  slug?: string;
+  description?: string;
+  status?: CategoryStatus;
 };
 
 type MutationMessage = {
@@ -84,6 +116,42 @@ export const postsApi = createApi({
       }),
       transformResponse: () => ({ message: "Author deleted successfully." }),
     }),
+
+    getCategoriesAdmin: builder.query<unknown, GetCategoriesListQuery | void>({
+      query: (params) => ({
+        url: "/common-rest/get-categories",
+        params: {
+          ...(params?.categoryid ? { categoryid: params.categoryid } : {}),
+          ...(params?.search ? { search: params.search } : {}),
+        },
+      }),
+    }),
+
+    createCategoryEntry: builder.mutation<MutationMessage, CreateCategoryBody>({
+      query: (body) => ({
+        url: "/common-rest/create-category",
+        method: "POST",
+        body,
+      }),
+      transformResponse: () => ({ message: "Category created successfully." }),
+    }),
+
+    updateCategoryEntry: builder.mutation<MutationMessage, UpdateCategoryBody>({
+      query: ({ id, ...body }) => ({
+        url: `/common-rest/update-categories/${id}`,
+        method: "PATCH",
+        body,
+      }),
+      transformResponse: () => ({ message: "Category updated successfully." }),
+    }),
+
+    deleteCategoryEntry: builder.mutation<MutationMessage, string>({
+      query: (id) => ({
+        url: `/common-rest/delete-categories/${id}`,
+        method: "DELETE",
+      }),
+      transformResponse: () => ({ message: "Category deleted successfully." }),
+    }),
   }),
 });
 
@@ -98,4 +166,8 @@ export const {
   useGetAuthorsAdminQuery,
   useCreateAuthorEntryMutation,
   useDeleteAuthorEntryMutation,
+  useGetCategoriesAdminQuery,
+  useCreateCategoryEntryMutation,
+  useUpdateCategoryEntryMutation,
+  useDeleteCategoryEntryMutation,
 } = postsApi;
