@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MultiSelect, MultiSelectOption } from "@/components/ui/multi-select";
 import {
   Policy,
   Role,
@@ -37,27 +38,28 @@ import {
   useGetRolesQuery,
 } from "@/redux/api/rbacApi";
 import { AppUser, useGetUsersQuery } from "@/redux/api/userApi";
+import { describeResourceType } from "../resourceTypeLabel";
 
 const formSchema = z
   .object({
-    policy_id: z.string().min(1, "Select a permission."),
+    policy_ids: z.array(z.string()).min(1, "Select at least one permission."),
     grantType: z.enum(["role", "user"]),
-    role_id: z.string().optional(),
-    user_id: z.string().optional(),
+    role_ids: z.array(z.string()).optional(),
+    user_ids: z.array(z.string()).optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.grantType === "role" && !data.role_id) {
+    if (data.grantType === "role" && !(data.role_ids?.length)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Select a role.",
-        path: ["role_id"],
+        message: "Select at least one role.",
+        path: ["role_ids"],
       });
     }
-    if (data.grantType === "user" && !data.user_id) {
+    if (data.grantType === "user" && !(data.user_ids?.length)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Select a user.",
-        path: ["user_id"],
+        message: "Select at least one user.",
+        path: ["user_ids"],
       });
     }
   });
@@ -121,13 +123,37 @@ export function AddPolicyBindingDialog({
   const [createPolicyBinding, { isLoading: isCreating }] =
     useCreatePolicyBindingMutation();
 
+  const policyOptions: MultiSelectOption[] = useMemo(
+    () =>
+      policies.map((policy) => {
+        const { group, label } = describeResourceType(
+          policy.resource_type,
+          policy.action,
+        );
+        return { value: policy.id, label, group };
+      }),
+    [policies],
+  );
+  const roleOptions: MultiSelectOption[] = useMemo(
+    () => roles.map((role) => ({ value: role.id, label: role.name })),
+    [roles],
+  );
+  const userOptions: MultiSelectOption[] = useMemo(
+    () =>
+      users.map((user) => ({
+        value: user.id,
+        label: `${user.name} (${user.email})`,
+      })),
+    [users],
+  );
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      policy_id: "",
+      policy_ids: [],
       grantType: "role",
-      role_id: "",
-      user_id: "",
+      role_ids: [],
+      user_ids: [],
     },
   });
 
@@ -140,19 +166,45 @@ export function AddPolicyBindingDialog({
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      const response = await createPolicyBinding({
-        policy_id: values.policy_id,
-        ...(values.grantType === "role"
-          ? { role_id: values.role_id }
-          : { user_id: values.user_id }),
-      }).unwrap();
-      toast.success(response.message);
-      await onCreated();
+    const targetIds =
+      values.grantType === "role" ? values.role_ids! : values.user_ids!;
+
+    const results = await Promise.allSettled(
+      values.policy_ids.flatMap((policy_id) =>
+        targetIds.map((targetId) =>
+          createPolicyBinding({
+            policy_id,
+            ...(values.grantType === "role"
+              ? { role_id: targetId }
+              : { user_id: targetId }),
+          }).unwrap(),
+        ),
+      ),
+    );
+
+    const failed = results.filter((r) => r.status === "rejected");
+    const succeeded = results.length - failed.length;
+
+    if (succeeded > 0) {
+      toast.success(
+        `Granted ${succeeded} permission${succeeded === 1 ? "" : "s"}.`,
+      );
+    }
+    if (failed.length > 0) {
+      const firstError =
+        failed[0].status === "rejected" ? failed[0].reason : undefined;
+      toast.error(
+        `${failed.length} grant${failed.length === 1 ? "" : "s"} failed: ${getApiMessage(
+          firstError,
+          "unknown error",
+        )}`,
+      );
+    }
+
+    await onCreated();
+    if (failed.length === 0) {
       form.reset();
       onOpenChange(false);
-    } catch (error: unknown) {
-      toast.error(getApiMessage(error, "Unable to grant this permission."));
     }
   };
 
@@ -169,28 +221,19 @@ export function AddPolicyBindingDialog({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="policy_id"
+              name="policy_ids"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Permission</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
+                  <FormLabel>Permissions</FormLabel>
+                  <MultiSelect
+                    options={policyOptions}
+                    selected={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select permissions"
+                    searchPlaceholder="Search permissions..."
+                    showSelectAll
                     disabled={isCreating || policiesLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a permission" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {policies.map((policy) => (
-                        <SelectItem key={policy.id} value={policy.id}>
-                          {policy.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -206,8 +249,8 @@ export function AddPolicyBindingDialog({
                     value={field.value}
                     onValueChange={(value) => {
                       field.onChange(value);
-                      form.setValue("role_id", "");
-                      form.setValue("user_id", "");
+                      form.setValue("role_ids", []);
+                      form.setValue("user_ids", []);
                     }}
                     disabled={isCreating}
                   >
@@ -217,8 +260,8 @@ export function AddPolicyBindingDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="role">A role</SelectItem>
-                      <SelectItem value="user">A specific user</SelectItem>
+                      <SelectItem value="role">Roles</SelectItem>
+                      <SelectItem value="user">Specific users</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -229,28 +272,18 @@ export function AddPolicyBindingDialog({
             {grantType === "role" ? (
               <FormField
                 control={form.control}
-                name="role_id"
+                name="role_ids"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Role</FormLabel>
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
+                    <FormLabel>Roles</FormLabel>
+                    <MultiSelect
+                      options={roleOptions}
+                      selected={field.value ?? []}
+                      onChange={field.onChange}
+                      placeholder="Select roles"
+                      searchPlaceholder="Search roles..."
                       disabled={isCreating || rolesLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {roles.map((role) => (
-                          <SelectItem key={role.id} value={role.id}>
-                            {role.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -258,28 +291,19 @@ export function AddPolicyBindingDialog({
             ) : (
               <FormField
                 control={form.control}
-                name="user_id"
+                name="user_ids"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>User</FormLabel>
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
+                    <FormLabel>Users</FormLabel>
+                    <MultiSelect
+                      options={userOptions}
+                      selected={field.value ?? []}
+                      onChange={field.onChange}
+                      placeholder="Select users"
+                      searchPlaceholder="Search users..."
                       disabled={isCreating || usersLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a user" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {users.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.name} ({user.email})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      listClassName="max-h-[220px]"
+                    />
                     <FormMessage />
                   </FormItem>
                 )}

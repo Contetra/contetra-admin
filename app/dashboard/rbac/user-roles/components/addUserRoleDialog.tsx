@@ -29,11 +29,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MultiSelect, MultiSelectOption } from "@/components/ui/multi-select";
 import { Role, useCreateUserRoleMutation, useGetRolesQuery } from "@/redux/api/rbacApi";
 import { AppUser, useGetUsersQuery } from "@/redux/api/userApi";
 
 const formSchema = z.object({
-  user_id: z.string().min(1, "Select a user."),
+  user_ids: z.array(z.string()).min(1, "Select at least one user."),
   role_id: z.string().min(1, "Select a role."),
 });
 
@@ -99,9 +100,18 @@ export function AddUserRoleDialog({
   const roles = useMemo(() => getRolesFromResponse(rolesResponse), [rolesResponse]);
   const [createUserRole, { isLoading: isCreating }] = useCreateUserRoleMutation();
 
+  const userOptions: MultiSelectOption[] = useMemo(
+    () =>
+      users.map((user) => ({
+        value: user.id,
+        label: `${user.name} (${user.email})`,
+      })),
+    [users],
+  );
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { user_id: "", role_id: "" },
+    defaultValues: { user_ids: [], role_id: "" },
   });
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -111,17 +121,35 @@ export function AddUserRoleDialog({
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      const response = await createUserRole({
-        user_id: values.user_id,
-        role_id: values.role_id,
-      }).unwrap();
-      toast.success(response.message);
-      await onCreated();
+    const results = await Promise.allSettled(
+      values.user_ids.map((user_id) =>
+        createUserRole({ user_id, role_id: values.role_id }).unwrap(),
+      ),
+    );
+
+    const failed = results.filter((r) => r.status === "rejected");
+    const succeeded = results.length - failed.length;
+
+    if (succeeded > 0) {
+      toast.success(
+        `Assigned the role to ${succeeded} user${succeeded === 1 ? "" : "s"}.`,
+      );
+    }
+    if (failed.length > 0) {
+      const firstError =
+        failed[0].status === "rejected" ? failed[0].reason : undefined;
+      toast.error(
+        `${failed.length} assignment${failed.length === 1 ? "" : "s"} failed: ${getApiMessage(
+          firstError,
+          "unknown error",
+        )}`,
+      );
+    }
+
+    await onCreated();
+    if (failed.length === 0) {
       form.reset();
       onOpenChange(false);
-    } catch (error: unknown) {
-      toast.error(getApiMessage(error, "Unable to assign the role."));
     }
   };
 
@@ -138,28 +166,19 @@ export function AddUserRoleDialog({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="user_id"
+              name="user_ids"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>User</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
+                  <FormLabel>Users</FormLabel>
+                  <MultiSelect
+                    options={userOptions}
+                    selected={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select users"
+                    searchPlaceholder="Search users..."
                     disabled={isCreating || usersLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a user" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {users.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.name} ({user.email})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    listClassName="max-h-[220px]"
+                  />
                   <FormMessage />
                 </FormItem>
               )}

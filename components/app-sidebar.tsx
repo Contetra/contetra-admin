@@ -9,6 +9,7 @@ import {
   Settings2,
   ShieldCheck,
   SquareTerminal,
+  type LucideIcon,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -25,8 +26,27 @@ import {
 } from "@/components/ui/sidebar"
 import { useGetMyPermissionsQuery } from "@/redux/api/rbacApi"
 
+type NavSubItem = {
+  title: string
+  url: string
+  permissionKey?: string
+}
+
+type NavMainItem = {
+  title: string
+  url: string
+  icon?: LucideIcon
+  isActive?: boolean
+  permissionKey?: string
+  items?: NavSubItem[]
+}
+
 // This is sample data.
-const data = {
+const data: {
+  user: { name: string; email: string; avatar: string }
+  teams: { name: string; logo: LucideIcon; plan: string }[]
+  navMain: NavMainItem[]
+} = {
   user: {
     name: "shadcn",
     email: "m@example.com",
@@ -67,18 +87,22 @@ const data = {
         {
           title: "All Blogs",
           url: "/dashboard/blog/all-blogs",
+          permissionKey: "admin_tab:blog:all-blogs",
         },
         {
           title: "Add a new blog",
           url: "/dashboard/blog/add-a-new-blog",
+          permissionKey: "admin_tab:blog:add-a-new-blog",
         },
         {
           title: "Authors",
           url: "/dashboard/blog/authors",
+          permissionKey: "admin_tab:blog:authors",
         },
         {
           title: "Categories",
           url: "/dashboard/blog/categories",
+          permissionKey: "admin_tab:blog:categories",
         },
       ],
     },
@@ -91,6 +115,7 @@ const data = {
         {
           title: "All Emails",
           url: "/dashboard/emails/all-emails",
+          permissionKey: "admin_tab:emails:all-emails",
         },
         {
           title: "Explorer",
@@ -111,22 +136,27 @@ const data = {
         {
           title: "Forms",
           url: "/dashboard/settings/forms",
+          permissionKey: "admin_tab:settings:forms",
         },
         {
           title: "Form Types",
           url: "/dashboard/settings/form-types",
+          permissionKey: "admin_tab:settings:form-types",
         },
         {
           title: "Team",
           url: "/dashboard/settings/team",
+          permissionKey: "admin_tab:settings:team",
         },
         {
           title: "Departments",
           url: "/dashboard/settings/departments",
+          permissionKey: "admin_tab:settings:departments",
         },
         {
           title: "Designations",
           url: "/dashboard/settings/designations",
+          permissionKey: "admin_tab:settings:designations",
         },
       ],
     },
@@ -160,10 +190,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   // Items without a permissionKey are always visible (fail-open — a tab
   // added later but not wired into the permissions map stays visible and
-  // noticeable, rather than silently disappearing for everyone).
-  const visibleNavMain = data.navMain.filter(
-    (item) => !item.permissionKey || permissions?.[item.permissionKey],
-  )
+  // noticeable, rather than silently disappearing for everyone). Sub-items
+  // are filtered the same way, independently of their parent's own gate.
+  const isVisible = (permissionKey?: string) =>
+    !permissionKey || Boolean(permissions?.[permissionKey])
+
+  const visibleNavMain = data.navMain
+    .filter((item) => isVisible(item.permissionKey))
+    .map((item) => ({
+      ...item,
+      items: item.items?.filter((subItem) => isVisible(subItem.permissionKey)),
+    }))
 
   return (
     <Sidebar collapsible="icon" {...props}>

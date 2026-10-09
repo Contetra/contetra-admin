@@ -1,10 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { truncateLabelTable } from "@/lib/utils";
 import type { PolicyBinding } from "@/redux/api/rbacApi";
 import { ColumnDef, HeaderContext } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
+import { describeResourceType } from "../resourceTypeLabel";
 
 const sortableHeader = (label: string) =>
   function SortableHeader({ column }: HeaderContext<PolicyBinding, unknown>) {
@@ -25,21 +25,26 @@ export const policyBindingsListColumns = (
   deletingId?: string,
 ): ColumnDef<PolicyBinding>[] => [
   {
+    id: "tab",
+    header: sortableHeader("Tab"),
+    cell: ({ row }) => {
+      const { group } = describeResourceType(
+        row.original.resource_type,
+        row.original.action,
+      );
+      return <span>{group}</span>;
+    },
+  },
+  {
     accessorKey: "policy_name",
     header: sortableHeader("Permission"),
-    cell: ({ row }) => (
-      <span>{truncateLabelTable(row.original.policy_name)}</span>
-    ),
-  },
-  {
-    accessorKey: "action",
-    header: sortableHeader("Action"),
-    cell: ({ row }) => <span>{row.original.action}</span>,
-  },
-  {
-    accessorKey: "resource_type",
-    header: sortableHeader("Resource"),
-    cell: ({ row }) => <span>{row.original.resource_type}</span>,
+    cell: ({ row }) => {
+      const { label } = describeResourceType(
+        row.original.resource_type,
+        row.original.action,
+      );
+      return <span title={row.original.policy_name}>{label}</span>;
+    },
   },
   {
     id: "grantee",
