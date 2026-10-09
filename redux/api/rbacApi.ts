@@ -53,6 +53,35 @@ type MutationMessage = {
 
 export type MyPermissions = Record<string, boolean>;
 
+export type Policy = {
+  id: string;
+  name: string;
+  description: string | null;
+  effect: "allow" | "deny";
+  action: string;
+  resource_type: string;
+  condition: string;
+};
+
+export type PolicyBinding = {
+  id: string;
+  policy_id: string;
+  policy_name: string;
+  action: string;
+  resource_type: string;
+  effect: "allow" | "deny";
+  user_id: string | null;
+  user_email: string | null;
+  role_id: string | null;
+  role_name: string | null;
+};
+
+type CreatePolicyBindingBody = {
+  policy_id: string;
+  user_id?: string;
+  role_id?: string;
+};
+
 export const rbacApi = createApi({
   reducerPath: "rbacApi",
   baseQuery: baseQueryWithAuth,
@@ -125,6 +154,38 @@ export const rbacApi = createApi({
         message: "Role removed from user successfully.",
       }),
     }),
+    getPolicies: builder.query<unknown, void>({
+      query: () => ({
+        url: "/rbac/get-policies",
+      }),
+    }),
+    getPolicyBindings: builder.query<unknown, void>({
+      query: () => ({
+        url: "/rbac/get-policy-bindings",
+      }),
+    }),
+    createPolicyBinding: builder.mutation<
+      MutationMessage,
+      CreatePolicyBindingBody
+    >({
+      query: (body) => ({
+        url: "/rbac/post-policy-bindings",
+        method: "POST",
+        body,
+      }),
+      transformResponse: () => ({
+        message: "Permission granted successfully.",
+      }),
+    }),
+    deletePolicyBinding: builder.mutation<MutationMessage, string>({
+      query: (id) => ({
+        url: `/rbac/delete-policy-bindings/${id}`,
+        method: "DELETE",
+      }),
+      transformResponse: () => ({
+        message: "Permission revoked successfully.",
+      }),
+    }),
   }),
 });
 
@@ -139,4 +200,8 @@ export const {
   useLazyGetUserRolesQuery,
   useCreateUserRoleMutation,
   useDeleteUserRoleMutation,
+  useGetPoliciesQuery,
+  useGetPolicyBindingsQuery,
+  useCreatePolicyBindingMutation,
+  useDeletePolicyBindingMutation,
 } = rbacApi;

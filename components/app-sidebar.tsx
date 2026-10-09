@@ -134,7 +134,9 @@ const data = {
       title: "RBAC",
       url: "#",
       icon: ShieldCheck,
-      permissionKey: "admin_tab:rbac",
+      // Intentionally no permissionKey: this is where access gets granted,
+      // including recovering a locked-out admin's own access, so it can't
+      // itself require a grant to be visible.
       items: [
         {
           title: "Roles",
@@ -143,6 +145,10 @@ const data = {
         {
           title: "User Roles",
           url: "/dashboard/rbac/user-roles",
+        },
+        {
+          title: "Policy Bindings",
+          url: "/dashboard/rbac/policy-bindings",
         },
       ],
     },
