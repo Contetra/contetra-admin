@@ -51,11 +51,20 @@ type MutationMessage = {
   message: string;
 };
 
+export type MyPermissions = Record<string, boolean>;
+
 export const rbacApi = createApi({
   reducerPath: "rbacApi",
   baseQuery: baseQueryWithAuth,
 
   endpoints: (builder) => ({
+    getMyPermissions: builder.query<MyPermissions, void>({
+      query: () => ({
+        url: "/rbac/my-permissions",
+      }),
+      // Backend wraps every response as { statusCode, response: <payload> }.
+      transformResponse: (raw: { response: MyPermissions }) => raw.response,
+    }),
     getRoles: builder.query<unknown, GetRolesQuery | void>({
       query: (params) => ({
         url: "/rbac/get-roles",
@@ -120,6 +129,7 @@ export const rbacApi = createApi({
 });
 
 export const {
+  useGetMyPermissionsQuery,
   useGetRolesQuery,
   useLazyGetRolesQuery,
   useCreateRoleMutation,

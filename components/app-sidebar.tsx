@@ -19,8 +19,11 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { useGetMyPermissionsQuery } from "@/redux/api/rbacApi"
 
 // This is sample data.
 const data = {
@@ -52,12 +55,14 @@ const data = {
       url: "/dashboard",
       icon: SquareTerminal,
       isActive: true,
+      permissionKey: "admin_tab:dashboard",
     },
     {
       title: "Blog",
       url: "dashboard/blog/all-blogs",
       icon: SquareTerminal,
       isActive: false,
+      permissionKey: "admin_tab:blog",
       items: [
         {
           title: "All Blogs",
@@ -81,6 +86,7 @@ const data = {
       title: "Emails",
       url: "#",
       icon: Bot,
+      permissionKey: "admin_tab:emails",
       items: [
         {
           title: "All Emails",
@@ -100,6 +106,7 @@ const data = {
       title: "Settings",
       url: "#",
       icon: Settings2,
+      permissionKey: "admin_tab:settings",
       items: [
         {
           title: "Forms",
@@ -127,6 +134,7 @@ const data = {
       title: "RBAC",
       url: "#",
       icon: ShieldCheck,
+      permissionKey: "admin_tab:rbac",
       items: [
         {
           title: "Roles",
@@ -142,13 +150,36 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { data: permissions, isLoading, isError } = useGetMyPermissionsQuery()
+
+  // Items without a permissionKey are always visible (fail-open — a tab
+  // added later but not wired into the permissions map stays visible and
+  // noticeable, rather than silently disappearing for everyone).
+  const visibleNavMain = data.navMain.filter(
+    (item) => !item.permissionKey || permissions?.[item.permissionKey],
+  )
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         {/* <TeamSwitcher teams={data.teams} /> */}
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        {isLoading ? (
+          <SidebarMenu>
+            <SidebarMenuItem className="px-2 py-1.5 text-sm text-muted-foreground">
+              Loading menu...
+            </SidebarMenuItem>
+          </SidebarMenu>
+        ) : isError ? (
+          <SidebarMenu>
+            <SidebarMenuItem className="px-2 py-1.5 text-sm text-destructive">
+              Couldn&apos;t load menu permissions.
+            </SidebarMenuItem>
+          </SidebarMenu>
+        ) : (
+          <NavMain items={visibleNavMain} />
+        )}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
