@@ -24,6 +24,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useGetMyPermissionsQuery } from "@/redux/api/rbacApi"
 
 type NavSubItem = {
@@ -43,15 +44,9 @@ type NavMainItem = {
 
 // This is sample data.
 const data: {
-  user: { name: string; email: string; avatar: string }
   teams: { name: string; logo: LucideIcon; plan: string }[]
   navMain: NavMainItem[]
 } = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   teams: [
     {
       name: "Acme Inc",
@@ -209,10 +204,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         {isLoading ? (
-          <SidebarMenu>
-            <SidebarMenuItem className="px-2 py-1.5 text-sm text-muted-foreground">
-              Loading menu...
-            </SidebarMenuItem>
+          <SidebarMenu className="gap-2 px-2 py-1.5">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <SidebarMenuItem key={index} className="flex items-center gap-2">
+                <Skeleton className="h-5 w-5 shrink-0 rounded" />
+                <Skeleton className="h-4 flex-1" />
+              </SidebarMenuItem>
+            ))}
           </SidebarMenu>
         ) : isError ? (
           <SidebarMenu>
@@ -225,7 +223,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         )}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
