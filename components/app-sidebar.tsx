@@ -159,9 +159,10 @@ const data: {
       title: "RBAC",
       url: "#",
       icon: ShieldCheck,
-      // Intentionally no permissionKey: this is where access gets granted,
-      // including recovering a locked-out admin's own access, so it can't
-      // itself require a grant to be visible.
+      permissionKey: "admin_tab:rbac",
+      // Sub-items are intentionally left ungated (no admin_tab:rbac:* policies
+      // exist yet) — if they were gated too and something went wrong with a
+      // grant, there'd be no way back into Policy Bindings to fix it.
       items: [
         {
           title: "Roles",
